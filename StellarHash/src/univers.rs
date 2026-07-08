@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use bevy::window::PrimaryWindow;
+
 
 // On importe notre fonction de "hachage"
 use crate::generation;
@@ -7,8 +9,12 @@ use crate::generation;
 // On a besoin de la caméra
 use crate::camera::CameraPrincipale;
 
+
+
 // Le Plugin qui regroupe la génération procédurale et les astres
 pub struct UniversPlugin;
+
+
 
 impl Plugin for UniversPlugin {
     fn build(&self, app: &mut App) {
@@ -16,7 +22,9 @@ impl Plugin for UniversPlugin {
            .init_resource::<SecteursCharges>()
            .add_systems(Update, (
                generer_univers_dynamique,
-               garbage_collector_spatial
+               garbage_collector_spatial,
+               gerer_clic_etoile,
+               animer_orbites
            ));
     }
 }
@@ -33,7 +41,15 @@ pub struct SecteursCharges(pub HashSet<(i32, i32)>);
 #[derive(Component)]
 pub struct Etoile;
 
+#[derive(Component)]
+pub struct SystemeDeveloppe;
 
+#[derive(Component)]
+pub struct Planete {
+    pub rayon_orbite: f32,
+    pub angle_actuel: f32,
+    pub vitesse_orbite: f32,
+}
 
 
 fn generer_univers_dynamique(
@@ -168,3 +184,87 @@ fn garbage_collector_spatial(
     });
 }
 
+// Écoute le clic gauche,
+// trouve l'étoile cliquée,
+// et génère ses planètes
+fn gerer_clic_etoile(
+    mut commands: Commands,
+    touches_souris: Res<ButtonInput<MouseButton>>,
+    requete_fenetre: Query<&Window, With<PrimaryWindow>>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
+    // Option<&SystemeDeveloppe> nous permet de savoir la présence de ce composant 
+    requete_etoiles: Query<(Entity, &Transform, &crate::astrophysique::SystemeStellaire, Option<&SystemeDeveloppe>), With<Etoile>>,
+) {
+    if !touches_souris.just_pressed(MouseButton::Left) { return; }
+
+    let fenetre = requete_fenetre.single();
+    let (camera, camera_transform) = requete_camera.single();
+
+    if let Some(position_curseur) = fenetre.cursor_position() {
+        if let Some(position_monde) = camera.viewport_to_world_2d(camera_transform, position_curseur) {
+            
+            for (entite, transform_etoile, systeme, developpe) in requete_etoiles.iter() {
+                let distance = position_monde.distance(transform_etoile.translation.truncate());
+                
+                // Si on clique sur une étoile (tolérance de 25 pixels)
+                if distance < 25.0 {
+                    if developpe.is_none() {
+                        
+                        commands.entity(entite).insert(SystemeDeveloppe)
+                        
+                        .with_children(|parent| {
+                            for i in 0..systeme.nb_planetes {
+                                // Espacement des orbites
+                                let rayon_orbite = 15.0 + (i as f32 * 10.0); 
+                                // Départ décalé
+                                let angle_depart = (i as f32) * 1.2;
+                                // Les planètes lointaines sont plus lentes (Loi de Kepler) 
+                                // (voir les 3 lois dans le livre à la maison)
+                                let vitesse = 1.5 / (i as f32 + 1.0); 
+
+                                parent.spawn((
+                                    SpriteBundle {
+                                        sprite: Sprite {
+                                            color: Color::srgb(0.6, 0.8, 0.9),
+                                            custom_size: Some(Vec2::new(3.0, 3.0)),
+                                            ..default()
+                                        },
+                                        // La position est calculée par rapport à l'étoile
+                                        transform: Transform::from_xyz(
+                                            rayon_orbite * angle_depart.cos(),
+                                            rayon_orbite * angle_depart.sin(),
+                                            1.0
+                                            // Z = 1.0 pour passer par-dessus l'étoile (Z = 0)
+                                        ),
+                                        ..default()
+                                    },
+                                    Planete {
+                                        rayon_orbite,
+                                        angle_actuel: angle_depart,
+                                        vitesse_orbite: vitesse,
+                                    },
+                                ));
+                            }
+                        });
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/// Applique la trigonométrie à chaque frame pour faire tourner les planètes
+fn animer_orbites(
+    temps: Res<Time>,
+    mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
+) {
+    for (mut transform, mut planete) in requete_planetes.iter_mut() {
+        // On avance l'angle
+        planete.angle_actuel += planete.vitesse_orbite * temps.delta_seconds();
+
+        // On applique les formules de coordonnées polaires
+        transform.translation.x = planete.rayon_orbite * planete.angle_actuel.cos();
+        transform.translation.y = planete.rayon_orbite * planete.angle_actuel.sin();
+    }
+}
