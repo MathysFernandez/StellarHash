@@ -1,14 +1,18 @@
 use bevy::prelude::*;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
+use bevy::window::PrimaryWindow;
+
+use crate::astrophysique::SystemeStellaire;
+use crate::camera::CameraPrincipale;
+use crate::univers::Etoile;
 
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        // On ajoute le plugin interne de Bevy qui calcule les FPS
         app.add_plugins(FrameTimeDiagnosticsPlugin)
-           .add_systems(Startup, initialiser_fps)
-           .add_systems(Update, mettre_a_jour_fps);
+           .add_systems(Startup, (initialiser_fps, initialiser_panneau_info))
+           .add_systems(Update, (mettre_a_jour_fps, gerer_survol_souris));
     }
 }
 
@@ -17,6 +21,11 @@ impl Plugin for UiPlugin {
 #[derive(Component)]
 struct TexteFps;
 
+#[derive(Component)]
+struct PanneauInfo;
+
+#[derive(Component)]
+struct TexteInfo;
 
 
 
@@ -58,6 +67,94 @@ fn mettre_a_jour_fps(
             // smoothed() donne une moyenne lissée
             if let Some(valeur) = fps.smoothed() {
                 texte.sections[0].value = format!("FPS: {:.1}", valeur);
+            }
+        }
+    }
+}
+
+
+fn initialiser_panneau_info(mut commands: Commands) {
+    commands.spawn((
+        NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                display: Display::None, // Caché par défaut
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(10.0)),
+                ..default()
+            },
+            background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)), // Fond noir semi-transparent
+            ..default()
+        },
+        PanneauInfo,
+    )).with_children(|parent| {
+        // Le texte à l'intérieur
+        parent.spawn((
+            TextBundle::from_section(
+                "Données Stellaire",
+                TextStyle {
+                    font_size: 18.0,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TexteInfo,
+        ));
+    });
+}
+
+fn gerer_survol_souris(
+    requete_fenetre: Query<&Window, With<PrimaryWindow>>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
+    requete_etoiles: Query<(&Transform, &SystemeStellaire), With<Etoile>>,
+    mut requete_panneau: Query<&mut Style, With<PanneauInfo>>, 
+    mut requete_texte: Query<&mut Text, With<TexteInfo>>,
+) {
+    let fenetre = requete_fenetre.single();
+    let (camera, camera_transform) = requete_camera.single();
+
+    // On vérifie si la souris est bien dans la fenêtre
+    if let Some(position_curseur_ecran) = fenetre.cursor_position() {
+        
+        // On convertit les pixels de l'écran en coordonnées du Monde 2D (Raycasting mathématique)
+        if let Some(position_monde) = camera.viewport_to_world_2d(camera_transform, position_curseur_ecran) {
+            
+            let mut etoile_survolee = None;
+
+            // On teste toutes les étoiles actuellement affichées pour voir si la souris est dessus
+            for (transform_etoile, systeme) in requete_etoiles.iter() {
+                // On calcule la distance entre le curseur et le centre de l'étoile
+                let distance = position_monde.distance(transform_etoile.translation.truncate());
+                
+                // Si la souris est à moins de 25 pixels de l'étoile (zone de tolérance pour faciliter le clic)
+                if distance < 25.0 {
+                    etoile_survolee = Some(systeme);
+                    break; // Dès qu'on trouve une étoile, on arrête de chercher
+                }
+            }
+
+            let mut style_panneau = requete_panneau.single_mut();
+            let mut texte = requete_texte.single_mut();
+
+            // Si on survole une étoile, on met à jour le texte et on affiche le panneau sous la souris
+            if let Some(systeme) = etoile_survolee {
+                style_panneau.display = Display::Flex;
+                
+                // On décalle un peu le panneau pour qu'il ne soit pas caché par le curseur de la souris
+                style_panneau.left = Val::Px(position_curseur_ecran.x + 15.0);
+                style_panneau.top = Val::Px(position_curseur_ecran.y + 15.0);
+
+                texte.sections[0].value = format!(
+                    "Système : {}\nClasse : {:?}\nMasse : {:.2} M☉\nPlanètes : {}\nÂge : {:.1} Ga",
+                    systeme.nom,
+                    systeme.classe,
+                    systeme.masse_solaire,
+                    systeme.nb_planetes,
+                    systeme.age_milliards_annees
+                );
+            } else {
+                // Si on est dans le vide spatial, on cache le panneau
+                style_panneau.display = Display::None;
             }
         }
     }
