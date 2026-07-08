@@ -47,7 +47,7 @@ fn generer_univers_dynamique(
     let cam_y = camera_transform.translation.y;
     let zoom = camera_transform.scale.x;
 
-    let taille_secteur = 150.0;
+    let taille_secteur = 80.0;
     let rayon_vision = (1000.0 * zoom) as i32 / taille_secteur as i32;
     let rayon_vision = rayon_vision.clamp(10, 100); 
 
@@ -65,7 +65,7 @@ fn generer_univers_dynamique(
 
             let probabilite = generation::calculer_hachage_spatial(x, y, graine.0);
 
-            if probabilite > 0.95 {
+            if probabilite > 0.70 {
                 // Le filtre du maximum locale
                 let mut est_le_plus_grand = true;
                 
@@ -133,7 +133,7 @@ fn garbage_collector_spatial(
     let cam_y = camera_transform.translation.y;
     let zoom = camera_transform.scale.x;
 
-    let taille_secteur = 150.0;
+    let taille_secteur = 80.0;
     
     // On calcule le rayon de vision actu
     let rayon_vision = (1000.0 * zoom) as i32 / taille_secteur as i32;
