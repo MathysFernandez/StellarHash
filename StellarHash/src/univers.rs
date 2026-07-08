@@ -24,7 +24,8 @@ impl Plugin for UniversPlugin {
                generer_univers_dynamique,
                garbage_collector_spatial,
                gerer_clic_etoile,
-               animer_orbites
+               animer_orbites,
+               gerer_lod_planetes
            ));
     }
 }
@@ -39,7 +40,10 @@ pub struct GraineGlobale(pub u32);
 pub struct SecteursCharges(pub HashSet<(i32, i32)>);
 
 #[derive(Component)]
-pub struct Etoile;
+pub struct Etoile {
+    pub grille_x: i32,
+    pub grille_y: i32,
+}
 
 #[derive(Component)]
 pub struct SystemeDeveloppe;
@@ -127,7 +131,7 @@ fn generer_univers_dynamique(
                             ),
                             ..default()
                         },
-                        Etoile,
+                        Etoile { grille_x: x, grille_y: y },
                         systeme_stellaire,
                     ));
                 }
@@ -141,7 +145,7 @@ fn generer_univers_dynamique(
 fn garbage_collector_spatial(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
-    requete_etoiles: Query<(Entity, &Transform), With<Etoile>>,
+    requete_etoiles: Query<(Entity, &Etoile)>,
     mut secteurs_charges: ResMut<SecteursCharges>,
 ) {
     let camera_transform = requete_camera.single();
@@ -163,13 +167,10 @@ fn garbage_collector_spatial(
     let centre_grille_y = (cam_y / taille_secteur).round() as i32;
 
     // Détruire les entite
-    for (entite, transform_etoile) in requete_etoiles.iter() {
-        let etoile_x = (transform_etoile.translation.x / taille_secteur).round() as i32;
-        let etoile_y = (transform_etoile.translation.y / taille_secteur).round() as i32;
-
-        if (etoile_x - centre_grille_x).abs() > rayon_despawn ||
-           (etoile_y - centre_grille_y).abs() > rayon_despawn {
-            commands.entity(entite).despawn();
+    for (entite, etoile) in requete_etoiles.iter() {
+        if (etoile.grille_x - centre_grille_x).abs() > rayon_despawn ||
+           (etoile.grille_y - centre_grille_y).abs() > rayon_despawn {
+            commands.entity(entite).despawn_recursive(); 
         }
     }
 
@@ -183,6 +184,30 @@ fn garbage_collector_spatial(
         (y - centre_grille_y).abs() <= rayon_despawn
     });
 }
+
+
+fn gerer_lod_planetes(
+    requete_camera: Query<&Transform, With<CameraPrincipale>>,
+    mut requete_planetes: Query<&mut Visibility, With<Planete>>,
+) {
+    let zoom = requete_camera.single().scale.x;
+    let seuil_lod = 3.5; 
+
+    let visibilite_voulue = if zoom > seuil_lod {
+        Visibility::Hidden
+    } else {
+        Visibility::Inherited
+    };
+
+    for mut visibilite in requete_planetes.iter_mut() {
+        if *visibilite != visibilite_voulue {
+            *visibilite = visibilite_voulue; 
+        }
+    }
+}
+
+
+
 
 // Écoute le clic gauche,
 // trouve l'étoile cliquée,
