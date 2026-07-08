@@ -72,9 +72,10 @@ fn deplacer_camera(
     let vitesse = 500.0 * transform.scale.x; 
 
     let mut direction = Vec3::ZERO;
-    if touches.pressed(KeyCode::ArrowLeft) || touches.pressed(KeyCode::KeyQ) { direction.x -= 1.0; }
+    // Les touches sont attribués pour les claviers QWERTY mais il fait la traduction pour les azerty !
+    if touches.pressed(KeyCode::ArrowLeft) || touches.pressed(KeyCode::KeyA) { direction.x -= 1.0; }
     if touches.pressed(KeyCode::ArrowRight) || touches.pressed(KeyCode::KeyD) { direction.x += 1.0; }
-    if touches.pressed(KeyCode::ArrowUp) || touches.pressed(KeyCode::KeyZ) { direction.y += 1.0; }
+    if touches.pressed(KeyCode::ArrowUp) || touches.pressed(KeyCode::KeyW) { direction.y += 1.0; }
     if touches.pressed(KeyCode::ArrowDown) || touches.pressed(KeyCode::KeyS) { direction.y -= 1.0; }
 
     if direction.length() > 0.0 {
