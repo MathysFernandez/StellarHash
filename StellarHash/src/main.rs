@@ -11,12 +11,15 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "StellarHash".to_string(),
-                resolution: (1280.0, 720.0).into(),
+                
+                // mode plein écran
+                mode: bevy::window::WindowMode::BorderlessFullscreen,
                 ..default()
             }),
             ..default()
         }))
-        // On injecte notre graine globale au démarrage 
+
+        // On injecte notre graine globale au démarrage
         // (pour test: 42)
         .insert_resource(GraineGlobale(42))
 
@@ -24,7 +27,7 @@ fn main() {
         // (Startup)
         .add_systems(Startup, initialiser_camera)
 
-        // Systèmes exécutés en boucle à chaque image 
+        // Systèmes exécutés en boucle à chaque image
         // (Update)
         .add_systems(Update, afficher_infos_debug)
         .run();
