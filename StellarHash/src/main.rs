@@ -3,6 +3,7 @@ use bevy::prelude::*;
 mod generation;
 mod camera;
 mod univers;
+mod ui;
 
 fn main() {
     App::new()
@@ -18,6 +19,8 @@ fn main() {
         // Plugins personnalisés 
         .add_plugins(camera::CameraPlugin)
         .add_plugins(univers::UniversPlugin)
+        .add_plugins(ui::UiPlugin)
+
         
         .add_systems(Update, quitter_jeu)
         .run();
