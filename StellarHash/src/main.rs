@@ -4,6 +4,7 @@ mod generation;
 mod camera;
 mod univers;
 mod ui;
+mod astrophysique;
 
 fn main() {
     App::new()

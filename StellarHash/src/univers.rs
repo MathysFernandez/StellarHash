@@ -66,25 +66,35 @@ fn generer_univers_dynamique(
             let probabilite = generation::calculer_hachage_spatial(x, y, graine.0);
 
             if probabilite > 0.95 {
-                let couleur_etoile = if probabilite > 0.99 {
-                    Color::srgb(0.5, 0.7, 1.0)
-                } else if probabilite > 0.97 {
-                    Color::srgb(1.0, 1.0, 0.6)
-                } else {
-                    Color::srgb(1.0, 0.4, 0.3)
+                let systeme_stellaire = crate::astrophysique::generer_caracteristiques(x, y, probabilite);
+
+                // On choisit la couleur en fonction de la classe spectrale de l'étoile
+                let couleur_etoile = match systeme_stellaire.classe {
+                    crate::astrophysique::ClasseSpectrale::O => Color::srgb(0.3, 0.5, 1.0), // Bleu vif
+                    crate::astrophysique::ClasseSpectrale::B => Color::srgb(0.6, 0.8, 1.0), // Bleu clair
+                    crate::astrophysique::ClasseSpectrale::A => Color::srgb(1.0, 1.0, 1.0), // Blanc
+                    crate::astrophysique::ClasseSpectrale::F => Color::srgb(1.0, 1.0, 0.8), // Jaune paille
+                    crate::astrophysique::ClasseSpectrale::G => Color::srgb(1.0, 0.9, 0.2), // Jaune (Soleil)
+                    crate::astrophysique::ClasseSpectrale::K => Color::srgb(1.0, 0.5, 0.1), // Orange
+                    crate::astrophysique::ClasseSpectrale::M => Color::srgb(0.9, 0.2, 0.2), // Rouge (Naine)
                 };
 
+                // On fait varier la taille visuelle selon le rayon calculé (avec une taille minimum de 8px)
+                let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
+
+                // On instancie l'entité avec TOUTES ses données
                 commands.spawn((
                     SpriteBundle {
                         sprite: Sprite {
                             color: couleur_etoile,
-                            custom_size: Some(Vec2::new(15.0, 15.0)), 
+                            custom_size: Some(Vec2::new(taille_visuelle, taille_visuelle)),
                             ..default()
                         },
                         transform: Transform::from_xyz(x as f32 * taille_secteur, y as f32 * taille_secteur, 0.0),
                         ..default()
                     },
                     Etoile,
+                    systeme_stellaire,
                 ));
             }
         }
