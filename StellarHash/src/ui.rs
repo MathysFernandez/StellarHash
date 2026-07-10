@@ -145,7 +145,7 @@ fn gerer_survol_souris(
                 style_panneau.top = Val::Px(position_curseur_ecran.y + 15.0);
 
                 texte.sections[0].value = format!(
-                    "Système : {}\nClasse : {:?}\nMasse : {:.2} M☉\nPlanètes : {}\nÂge : {:.1} Ga",
+                    "Systeme : {}\nClasse : {:?}\nMasse Solaire : {:.2} MS\nPlanetes : {}\nAge : {:.1} Ga",
                     systeme.nom,
                     systeme.classe,
                     systeme.masse_solaire,
