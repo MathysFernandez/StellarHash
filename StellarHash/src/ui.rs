@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::window::PrimaryWindow;
+use std::time::SystemTime;
 
 use crate::astrophysique::SystemeStellaire;
 use crate::camera::CameraPrincipale;
@@ -180,7 +181,12 @@ fn gerer_survol_souris(
 fn initialiser_panneau_anecdotes(mut commands: Commands) {
     let lignes: Vec<&str> = FICHIER_ANECDOTES.lines().filter(|l| !l.is_empty()).collect();
     let texte_initial = if !lignes.is_empty() {
-        lignes[0]
+        let temps_actuel = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as usize;
+        
+        // On utilise ce nombre pour choisir une ligne au "hasard" mdr
+        let index_aleatoire = temps_actuel % lignes.len();
+        
+        lignes[index_aleatoire]
     } else {
         "Base de données vide."
     };
@@ -215,7 +221,6 @@ fn mettre_a_jour_anecdotes(
     temps: Res<Time>,
     mut chrono: ResMut<ChronoAnecdote>,
     mut requete_texte: Query<&mut Text, With<TexteAnecdote>>,
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
 ) {
     chrono.0.tick(temps.delta());
 
@@ -225,16 +230,11 @@ fn mettre_a_jour_anecdotes(
         
         if lignes.is_empty() { return; }
 
-        let camera_transform = requete_camera.single();
-        let cam_x = camera_transform.translation.x as usize;
-        let cam_y = camera_transform.translation.y as usize;
-
-        let identifiant_unique = cam_x.wrapping_add(cam_y).wrapping_add(temps.elapsed_seconds() as usize);
-        
-        let index_choisi = identifiant_unique % lignes.len();
+        let temps_actuel = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as usize;
+        let index_aleatoire = temps_actuel % lignes.len();
 
         // On met à jour le texte
         let mut texte = requete_texte.single_mut();
-        texte.sections[0].value = format!("{}", lignes[index_choisi]);
+        texte.sections[0].value = format!("{}", lignes[index_aleatoire]);
     }
 }
