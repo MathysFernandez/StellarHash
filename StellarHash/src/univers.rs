@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy::window::PrimaryWindow;
+use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle}; // Import des outils pour dessiner des formes 2D
 
 
 // On importe notre fonction de "hachage"
@@ -61,6 +62,8 @@ fn generer_univers_dynamique(
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
     graine: Res<GraineGlobale>,
     mut secteurs_charges: ResMut<SecteursCharges>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let camera_transform = requete_camera.single();
     let cam_x = camera_transform.translation.x;
@@ -118,14 +121,11 @@ fn generer_univers_dynamique(
                     let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
 
                     commands.spawn((
-                        SpriteBundle {
-                            sprite: Sprite {
-                                color: couleur_etoile,
-                                custom_size: Some(Vec2::new(taille_visuelle, taille_visuelle)),
-                                ..default()
-                            },
+                        MaterialMesh2dBundle {
+                            mesh: Mesh2dHandle(meshes.add(Circle::new(taille_visuelle / 2.0))), 
+                            material: materials.add(ColorMaterial::from(couleur_etoile)),
                             transform: Transform::from_xyz(
-                                (x as f32 * taille_secteur) + (probabilite * 50.0),
+                                (x as f32 * taille_secteur) + (probabilite * 50.0), 
                                 (y as f32 * taille_secteur) - (probabilite * 50.0), 
                                 0.0
                             ),
@@ -217,8 +217,10 @@ fn gerer_clic_etoile(
     touches_souris: Res<ButtonInput<MouseButton>>,
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
-    // Option<&SystemeDeveloppe> nous permet de savoir la présence de ce composant 
     requete_etoiles: Query<(Entity, &Transform, &crate::astrophysique::SystemeStellaire, Option<&SystemeDeveloppe>), With<Etoile>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+
 ) {
     if !touches_souris.just_pressed(MouseButton::Left) { return; }
 
@@ -245,16 +247,13 @@ fn gerer_clic_etoile(
                                 let angle_depart = (i as f32) * 1.2;
                                 // Les planètes lointaines sont plus lentes (Loi de Kepler) 
                                 // (voir les 3 lois dans le livre à la maison)
-                                let vitesse = 1.5 / (i as f32 + 1.0); 
+                                let vitesse = 1.5 / (i as f32 + 1.0);
 
                                 parent.spawn((
-                                    SpriteBundle {
-                                        sprite: Sprite {
-                                            color: Color::srgb(0.6, 0.8, 0.9),
-                                            custom_size: Some(Vec2::new(3.0, 3.0)),
-                                            ..default()
-                                        },
-                                        // La position est calculée par rapport à l'étoile
+                                    MaterialMesh2dBundle {
+                                        // Cercle de rayon 2.0
+                                        mesh: Mesh2dHandle(meshes.add(Circle::new(2.0))),
+                                        material: materials.add(ColorMaterial::from(Color::srgb(0.6, 0.8, 0.9))),
                                         transform: Transform::from_xyz(
                                             rayon_orbite * angle_depart.cos(),
                                             rayon_orbite * angle_depart.sin(),
