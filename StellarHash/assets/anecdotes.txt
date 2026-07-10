@@ -1,0 +1,8 @@
+Deuxième loi de Kepler: En parcourant son orbite, une planète balaie des aires égales en des durées égales.
+Parce qu'ils sont éloignés de la masse de la Terre, le temps s'écoule légèrement plus vite pour les satellites GPS en orbite que pour nous à la surface (d'environ 38 microsecondes par jour). Si l'on ne corrigeait pas ce décalage grâce aux équations de la relativité d'Einstein, nos systèmes de navigation accumuleraient une erreur d'une dizaine de kilomètres par jour.
+Sur Vénus, la rotation de la planète sur son propre axe est si lente qu'un "jour" vénusien dure environ 243 jours terrestres.
+Dans l'espace, il n'y a littéralement aucun bruit. Contrairement à la lumière, le son a besoin d'un milieu matériel (comme l'air, l'eau ou le métal) pour faire voyager ses ondes.
+Les empreintes de bottes laissées par Neil Armstrong et les autres astronautes d'Apollo y resteront intactes pendant des millions d'années, à moins qu'une météorite ne tombe pile à cet endroit.
+La très grande majorité des systèmes solaire sont quasiment plat comme un disque, car ils s'ont formé à partir d'un nuage de gaz et de poussière en rotation dont la force centrifuge a aplati la matière.
+L'exoplanète 55 Cancri e, située à 40 années-lumière de nous, serait en très grande partie composée de diamant massif.
+Plus une exoplanète est éloignée de son étoile, plus l'attraction gravitationnelle qu'elle subit est faible, ce qui l'oblige à se déplacer beaucoup plus lentement pour rester en équilibre sur son orbite sans s'échapper dans l'espace.

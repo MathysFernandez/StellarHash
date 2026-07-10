@@ -6,13 +6,21 @@ use crate::astrophysique::SystemeStellaire;
 use crate::camera::CameraPrincipale;
 use crate::univers::Etoile;
 
+const FICHIER_ANECDOTES: &str = include_str!("../assets/anecdotes.txt");
+
+
+
+
+
+
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
-           .add_systems(Startup, (initialiser_fps, initialiser_panneau_info))
-           .add_systems(Update, (mettre_a_jour_fps, gerer_survol_souris));
+           .insert_resource(ChronoAnecdote(Timer::from_seconds(60.0, TimerMode::Repeating)))
+           .add_systems(Startup, (initialiser_fps, initialiser_panneau_info, initialiser_panneau_anecdotes))
+           .add_systems(Update, (mettre_a_jour_fps, gerer_survol_souris, mettre_a_jour_anecdotes));
     }
 }
 
@@ -26,6 +34,13 @@ struct PanneauInfo;
 
 #[derive(Component)]
 struct TexteInfo;
+
+#[derive(Resource)]
+struct ChronoAnecdote(Timer);
+
+#[derive(Component)]
+struct TexteAnecdote;
+
 
 
 
@@ -157,5 +172,69 @@ fn gerer_survol_souris(
                 style_panneau.display = Display::None;
             }
         }
+    }
+}
+
+
+
+fn initialiser_panneau_anecdotes(mut commands: Commands) {
+    let lignes: Vec<&str> = FICHIER_ANECDOTES.lines().filter(|l| !l.is_empty()).collect();
+    let texte_initial = if !lignes.is_empty() {
+        lignes[0]
+    } else {
+        "Base de données vide."
+    };
+
+    commands.spawn(NodeBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            right: Val::Px(20.0),
+            top: Val::Percent(40.0),
+            max_width: Val::Px(300.0),
+            padding: UiRect::all(Val::Px(15.0)),
+            ..default()
+        },
+        background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
+        ..default()
+    }).with_children(|parent| {
+        parent.spawn((
+            TextBundle::from_section(
+                texte_initial,
+                TextStyle {
+                    font_size: 16.0,
+                    color: Color::srgb(0.8, 0.8, 1.0),
+                    ..default()
+                },
+            ),
+            TexteAnecdote,
+        ));
+    });
+}
+
+fn mettre_a_jour_anecdotes(
+    temps: Res<Time>,
+    mut chrono: ResMut<ChronoAnecdote>,
+    mut requete_texte: Query<&mut Text, With<TexteAnecdote>>,
+    requete_camera: Query<&Transform, With<CameraPrincipale>>,
+) {
+    chrono.0.tick(temps.delta());
+
+    if chrono.0.just_finished() {
+        
+        let lignes: Vec<&str> = FICHIER_ANECDOTES.lines().filter(|l| !l.is_empty()).collect();
+        
+        if lignes.is_empty() { return; }
+
+        let camera_transform = requete_camera.single();
+        let cam_x = camera_transform.translation.x as usize;
+        let cam_y = camera_transform.translation.y as usize;
+
+        let identifiant_unique = cam_x.wrapping_add(cam_y).wrapping_add(temps.elapsed_seconds() as usize);
+        
+        let index_choisi = identifiant_unique % lignes.len();
+
+        // On met à jour le texte
+        let mut texte = requete_texte.single_mut();
+        texte.sections[0].value = format!("{}", lignes[index_choisi]);
     }
 }
