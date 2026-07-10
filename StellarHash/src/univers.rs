@@ -271,6 +271,9 @@ fn gerer_clic_etoile(
                                 ));
                             }
                         });
+                    } else {
+                        commands.entity(entite).remove::<SystemeDeveloppe>();
+                        commands.entity(entite).despawn_descendants();
                     }
                     break;
                 }
@@ -279,7 +282,7 @@ fn gerer_clic_etoile(
     }
 }
 
-/// Applique la trigonométrie à chaque frame pour faire tourner les planètes
+// Applique la trigonométrie à chaque frame pour faire tourner les planètes
 fn animer_orbites(
     temps: Res<Time>,
     mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
@@ -288,7 +291,6 @@ fn animer_orbites(
         // On avance l'angle
         planete.angle_actuel += planete.vitesse_orbite * temps.delta_seconds();
 
-        // On applique les formules de coordonnées polaires
         transform.translation.x = planete.rayon_orbite * planete.angle_actuel.cos();
         transform.translation.y = planete.rayon_orbite * planete.angle_actuel.sin();
     }
