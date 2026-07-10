@@ -47,7 +47,8 @@ struct TexteAnecdote;
 
 
 
-fn initialiser_fps(mut commands: Commands) {
+fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let police = asset_server.load("../fonts/GeistPixel.ttf");
     // On crée une une boîte d'interface collée en haut à gauche
     commands.spawn(NodeBundle {
         style: Style {
@@ -63,9 +64,9 @@ fn initialiser_fps(mut commands: Commands) {
             TextBundle::from_section(
                 "FPS: calcul...",
                 TextStyle {
+                    font: police,
                     font_size: 24.0,
                     color: Color::srgb(0.0, 1.0, 0.0),
-                    ..default()
                 },
             ),
             TexteFps,
@@ -78,7 +79,7 @@ fn mettre_a_jour_fps(
     mut requete_texte: Query<&mut Text, With<TexteFps>>,
 ) {
     for mut texte in &mut requete_texte {
-        // On récupère la donnée FPS depuis le moteur 
+        // On récupère la donnée FPS depuis le moteur
         if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
             // smoothed() donne une moyenne lissée
             if let Some(valeur) = fps.smoothed() {
@@ -89,7 +90,9 @@ fn mettre_a_jour_fps(
 }
 
 
-fn initialiser_panneau_info(mut commands: Commands) {
+fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let police = asset_server.load("../fonts/GeistPixel.ttf");
+    
     commands.spawn((
         NodeBundle {
             style: Style {
@@ -109,9 +112,9 @@ fn initialiser_panneau_info(mut commands: Commands) {
             TextBundle::from_section(
                 "Données Stellaire",
                 TextStyle {
+                    font: police,
                     font_size: 18.0,
                     color: Color::WHITE,
-                    ..default()
                 },
             ),
             TexteInfo,
@@ -178,7 +181,9 @@ fn gerer_survol_souris(
 
 
 
-fn initialiser_panneau_anecdotes(mut commands: Commands) {
+fn initialiser_panneau_anecdotes(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let police = asset_server.load("../fonts/GeistPixel.ttf");
+
     let lignes: Vec<&str> = FICHIER_ANECDOTES.lines().filter(|l| !l.is_empty()).collect();
     let texte_initial = if !lignes.is_empty() {
         let temps_actuel = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as usize;
@@ -207,9 +212,9 @@ fn initialiser_panneau_anecdotes(mut commands: Commands) {
             TextBundle::from_section(
                 texte_initial,
                 TextStyle {
+                    font: police,
                     font_size: 16.0,
                     color: Color::srgb(0.8, 0.8, 1.0),
-                    ..default()
                 },
             ),
             TexteAnecdote,
