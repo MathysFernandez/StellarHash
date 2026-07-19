@@ -1,21 +1,12 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy::window::PrimaryWindow;
-use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle}; // Import des outils pour dessiner des formes 2D
+use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 
-
-// On importe notre fonction de "hachage"
 use crate::generation;
-
-// On a besoin de la caméra
 use crate::camera::CameraPrincipale;
 
-
-
-// Le Plugin qui regroupe la génération procédurale et les astres
 pub struct UniversPlugin;
-
-
 
 impl Plugin for UniversPlugin {
     fn build(&self, app: &mut App) {
@@ -30,9 +21,6 @@ impl Plugin for UniversPlugin {
            ));
     }
 }
-
-
-
 
 #[derive(Resource)]
 pub struct GraineGlobale(pub u32);
@@ -56,7 +44,6 @@ pub struct Planete {
     pub vitesse_orbite: f32,
 }
 
-
 fn generer_univers_dynamique(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
@@ -71,6 +58,7 @@ fn generer_univers_dynamique(
     let pos_actuelle = camera_transform.translation.truncate();
     let zoom = camera_transform.scale.x;
 
+    // Optimisation : On ne régénère que si la caméra bouge
     if pos_actuelle.distance(*derniere_pos_maj) < 40.0 && (zoom - *dernier_zoom_maj).abs() < 0.1 {
         return;
     }
@@ -96,59 +84,40 @@ fn generer_univers_dynamique(
 
             let probabilite = generation::calculer_hachage_spatial(x, y, graine.0);
 
-            if probabilite > 0.70 {
-                // Le filtre du maximum locale
-                let mut est_le_plus_grand = true;
-                
-                'voisins: for dx in -1..=1 {
-                    for dy in -1..=1 {
-                        if dx == 0 && dy == 0 { continue; }
-                        
-                        let prob_voisin = generation::calculer_hachage_spatial(x + dx, y + dy, graine.0);
-                        if prob_voisin >= probabilite {
-                            est_le_plus_grand = false;
-                            break 'voisins; 
-                        }
-                    }
-                }
+            // Seuil de génération augmenté à 0.95 pour la performance et la clarté
+            if probabilite > 0.95 {
+                let systeme_stellaire = crate::astrophysique::generer_caracteristiques(x, y, probabilite);
 
+                let couleur_etoile = match systeme_stellaire.classe {
+                    crate::astrophysique::ClasseSpectrale::O => Color::srgb(0.3, 0.5, 1.0),
+                    crate::astrophysique::ClasseSpectrale::B => Color::srgb(0.6, 0.8, 1.0),
+                    crate::astrophysique::ClasseSpectrale::A => Color::srgb(1.0, 1.0, 1.0),
+                    crate::astrophysique::ClasseSpectrale::F => Color::srgb(1.0, 1.0, 0.8), 
+                    crate::astrophysique::ClasseSpectrale::G => Color::srgb(1.0, 0.9, 0.2),
+                    crate::astrophysique::ClasseSpectrale::K => Color::srgb(1.0, 0.5, 0.1),
+                    crate::astrophysique::ClasseSpectrale::M => Color::srgb(0.9, 0.2, 0.2),
+                };
 
-                if est_le_plus_grand {
-                    let systeme_stellaire = crate::astrophysique::generer_caracteristiques(x, y, probabilite);
+                let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
 
-                    let couleur_etoile = match systeme_stellaire.classe {
-                        crate::astrophysique::ClasseSpectrale::O => Color::srgb(0.3, 0.5, 1.0),
-                        crate::astrophysique::ClasseSpectrale::B => Color::srgb(0.6, 0.8, 1.0),
-                        crate::astrophysique::ClasseSpectrale::A => Color::srgb(1.0, 1.0, 1.0),
-                        crate::astrophysique::ClasseSpectrale::F => Color::srgb(1.0, 1.0, 0.8), 
-                        crate::astrophysique::ClasseSpectrale::G => Color::srgb(1.0, 0.9, 0.2),
-                        crate::astrophysique::ClasseSpectrale::K => Color::srgb(1.0, 0.5, 0.1),
-                        crate::astrophysique::ClasseSpectrale::M => Color::srgb(0.9, 0.2, 0.2),
-                    };
-
-                    let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
-
-                    commands.spawn((
-                        MaterialMesh2dBundle {
-                            mesh: Mesh2dHandle(meshes.add(Circle::new(taille_visuelle / 2.0))), 
-                            material: materials.add(ColorMaterial::from(couleur_etoile)),
-                            transform: Transform::from_xyz(
-                                (x as f32 * taille_secteur) + (probabilite * 50.0), 
-                                (y as f32 * taille_secteur) - (probabilite * 50.0), 
-                                0.0
-                            ),
-                            ..default()
-                        },
-                        Etoile { grille_x: x, grille_y: y },
-                        systeme_stellaire,
-                    ));
-                }
+                commands.spawn((
+                    MaterialMesh2dBundle {
+                        mesh: Mesh2dHandle(meshes.add(Circle::new(taille_visuelle / 2.0))), 
+                        material: materials.add(ColorMaterial::from(couleur_etoile)),
+                        transform: Transform::from_xyz(
+                            (x as f32 * taille_secteur), 
+                            (y as f32 * taille_secteur), 
+                            0.0
+                        ),
+                        ..default()
+                    },
+                    Etoile { grille_x: x, grille_y: y },
+                    systeme_stellaire,
+                ));
             }
         }
     }
 }
-
-
 
 fn garbage_collector_spatial(
     mut commands: Commands,
@@ -170,19 +139,13 @@ fn garbage_collector_spatial(
     *dernier_zoom_maj = zoom;
 
     let taille_secteur = 80.0;
-    
-    // On calcule le rayon de vision actu
     let rayon_vision = (1000.0 * zoom) as i32 / taille_secteur as i32;
     let rayon_vision = rayon_vision.clamp(10, 100);
-    
-    // On ajoute une "marge de sécurité" (padding).
-    // On détruit les étoiles un peu PLUS LOIN que notre rayon de vision.
     let rayon_despawn = rayon_vision + 5;
 
     let centre_grille_x = (pos_actuelle.x / taille_secteur).round() as i32;
     let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
-    // Détruire les entite
     for (entite, etoile) in requete_etoiles.iter() {
         if (etoile.grille_x - centre_grille_x).abs() > rayon_despawn ||
            (etoile.grille_y - centre_grille_y).abs() > rayon_despawn {
@@ -190,47 +153,27 @@ fn garbage_collector_spatial(
         }
     }
 
-
-
-
-    // VIDER LE CACHE
-    // Tout secteur en dehors du rayon de despawn sera définitivement effacé de la mémoire.
     secteurs_charges.0.retain(|&(x, y)| {
         (x - centre_grille_x).abs() <= rayon_despawn &&
         (y - centre_grille_y).abs() <= rayon_despawn
     });
 }
 
-
 fn gerer_lod_planetes(
     requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
     mut requete_planetes: Query<&mut Visibility, With<Planete>>,
 ) {
     if let Ok(camera_transform) = requete_camera.get_single() {
-
-        let zoom = requete_camera.single().scale.x;
+        let zoom = camera_transform.scale.x;
         let seuil_lod = 3.5; 
-
-        let visibilite_voulue = if zoom > seuil_lod {
-            Visibility::Hidden
-        } else {
-            Visibility::Inherited
-        };
+        let visibilite_voulue = if zoom > seuil_lod { Visibility::Hidden } else { Visibility::Inherited };
 
         for mut visibilite in requete_planetes.iter_mut() {
-            if *visibilite != visibilite_voulue {
-                *visibilite = visibilite_voulue; 
-            }
+            if *visibilite != visibilite_voulue { *visibilite = visibilite_voulue; }
         }
     }
 }
 
-
-
-
-// Écoute le clic gauche,
-// trouve l'étoile cliquée,
-// et génère ses planètes
 fn gerer_clic_etoile(
     mut commands: Commands,
     touches_souris: Res<ButtonInput<MouseButton>>,
@@ -239,7 +182,6 @@ fn gerer_clic_etoile(
     requete_etoiles: Query<(Entity, &Transform, &crate::astrophysique::SystemeStellaire, Option<&SystemeDeveloppe>, &Etoile)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-
 ) {
     if !touches_souris.just_pressed(MouseButton::Left) { return; }
 
@@ -249,56 +191,31 @@ fn gerer_clic_etoile(
     if let Some(position_curseur) = fenetre.cursor_position() {
         if let Some(position_monde) = camera.viewport_to_world_2d(camera_transform, position_curseur) {
             
-                        // Calcul de la case cliquée
-
             let taille_secteur = 80.0;
             let clic_grille_x = (position_monde.x / taille_secteur).round() as i32;
             let clic_grille_y = (position_monde.y / taille_secteur).round() as i32;
 
             for (entite, transform_etoile, systeme, developpe, etoile) in requete_etoiles.iter() {
-                // Filtre spatial immédiat
-                if (etoile.grille_x - clic_grille_x).abs() > 1 || 
-                   (etoile.grille_y - clic_grille_y).abs() > 1 {
+                if (etoile.grille_x - clic_grille_x).abs() > 1 || (etoile.grille_y - clic_grille_y).abs() > 1 {
                     continue; 
                 }
                 
-                
-                let distance = position_monde.distance(transform_etoile.translation.truncate());
-                
-                // Si on clique sur une étoile (tolérance de 25 pixels)
-                if distance < 25.0 {
+                if position_monde.distance(transform_etoile.translation.truncate()) < 25.0 {
                     if developpe.is_none() {
-                        
-                        commands.entity(entite).insert(SystemeDeveloppe)
-                        
-                        .with_children(|parent| {
+                        commands.entity(entite).insert(SystemeDeveloppe).with_children(|parent| {
                             for i in 0..systeme.nb_planetes {
-                                // Espacement des orbites
                                 let rayon_orbite = 15.0 + (i as f32 * 10.0); 
-                                // Départ décalé
                                 let angle_depart = (i as f32) * 1.2;
-                                // Les planètes lointaines sont plus lentes (Loi de Kepler) 
-                                // (voir les 3 lois dans le livre à la maison)
                                 let vitesse = 1.5 / (i as f32 + 1.0);
 
                                 parent.spawn((
                                     MaterialMesh2dBundle {
-                                        // Cercle de rayon 2.0
                                         mesh: Mesh2dHandle(meshes.add(Circle::new(2.0))),
                                         material: materials.add(ColorMaterial::from(Color::srgb(0.6, 0.8, 0.9))),
-                                        transform: Transform::from_xyz(
-                                            rayon_orbite * angle_depart.cos(),
-                                            rayon_orbite * angle_depart.sin(),
-                                            1.0
-                                            // Z = 1.0 pour passer par-dessus l'étoile (Z = 0)
-                                        ),
+                                        transform: Transform::from_xyz(rayon_orbite * angle_depart.cos(), rayon_orbite * angle_depart.sin(), 1.0),
                                         ..default()
                                     },
-                                    Planete {
-                                        rayon_orbite,
-                                        angle_actuel: angle_depart,
-                                        vitesse_orbite: vitesse,
-                                    },
+                                    Planete { rayon_orbite, angle_actuel: angle_depart, vitesse_orbite: vitesse },
                                 ));
                             }
                         });
@@ -313,15 +230,12 @@ fn gerer_clic_etoile(
     }
 }
 
-// Applique la trigonométrie à chaque frame pour faire tourner les planètes
 fn animer_orbites(
     temps: Res<Time>,
     mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
 ) {
     for (mut transform, mut planete) in requete_planetes.iter_mut() {
-        // On avance l'angle
         planete.angle_actuel += planete.vitesse_orbite * temps.delta_seconds();
-
         transform.translation.x = planete.rayon_orbite * planete.angle_actuel.cos();
         transform.translation.y = planete.rayon_orbite * planete.angle_actuel.sin();
     }
