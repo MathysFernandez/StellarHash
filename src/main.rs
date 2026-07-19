@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 
-mod generation;
+mod astrophysique;
 mod camera;
+mod generation;
+mod ui;
 mod univers;
 
 fn main() {
@@ -15,16 +17,19 @@ fn main() {
             }),
             ..default()
         }))
-        // Plugins personnalisés 
+        // Plugins personnalisés
         .add_plugins(camera::CameraPlugin)
         .add_plugins(univers::UniversPlugin)
-        
+        .add_plugins(ui::UiPlugin)
         .add_systems(Update, quitter_jeu)
         .run();
 }
 
 // Permet de quitter le jeu avec la touche Echap
-fn quitter_jeu(touches: Res<ButtonInput<KeyCode>>, mut evenements_sortie: EventWriter<bevy::app::AppExit>) {
+fn quitter_jeu(
+    touches: Res<ButtonInput<KeyCode>>,
+    mut evenements_sortie: EventWriter<bevy::app::AppExit>,
+) {
     if touches.just_pressed(KeyCode::Escape) {
         evenements_sortie.send(bevy::app::AppExit::Success);
     }
