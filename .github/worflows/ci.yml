@@ -3,9 +3,9 @@ name: Rust CI
 # Trigger the workflow on PRs to the main branch
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 env:
   CARGO_TERM_COLOR: always
