@@ -105,8 +105,8 @@ fn generer_univers_dynamique(
                         mesh: Mesh2dHandle(meshes.add(Circle::new(taille_visuelle / 2.0))), 
                         material: materials.add(ColorMaterial::from(couleur_etoile)),
                         transform: Transform::from_xyz(
-                            (x as f32 * taille_secteur), 
-                            (y as f32 * taille_secteur), 
+                            x as f32 * taille_secteur, 
+                            y as f32 * taille_secteur, 
                             0.0
                         ),
                         ..default()
