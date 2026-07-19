@@ -64,18 +64,26 @@ fn generer_univers_dynamique(
     mut secteurs_charges: ResMut<SecteursCharges>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut derniere_pos_maj: Local<Vec2>, 
+    mut dernier_zoom_maj: Local<f32>,
 ) {
     let camera_transform = requete_camera.single();
-    let cam_x = camera_transform.translation.x;
-    let cam_y = camera_transform.translation.y;
+    let pos_actuelle = camera_transform.translation.truncate();
     let zoom = camera_transform.scale.x;
+
+    if pos_actuelle.distance(*derniere_pos_maj) < 40.0 && (zoom - *dernier_zoom_maj).abs() < 0.1 {
+        return;
+    }
+
+    *derniere_pos_maj = pos_actuelle;
+    *dernier_zoom_maj = zoom;
 
     let taille_secteur = 80.0;
     let rayon_vision = (1000.0 * zoom) as i32 / taille_secteur as i32;
     let rayon_vision = rayon_vision.clamp(10, 100); 
 
-    let centre_grille_x = (cam_x / taille_secteur).round() as i32;
-    let centre_grille_y = (cam_y / taille_secteur).round() as i32;
+    let centre_grille_x = (pos_actuelle.x / taille_secteur).round() as i32;
+    let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
     for x in (centre_grille_x - rayon_vision)..=(centre_grille_x + rayon_vision) {
         for y in (centre_grille_y - rayon_vision)..=(centre_grille_y + rayon_vision) {
@@ -147,11 +155,19 @@ fn garbage_collector_spatial(
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
     requete_etoiles: Query<(Entity, &Etoile)>,
     mut secteurs_charges: ResMut<SecteursCharges>,
+    mut derniere_pos_maj: Local<Vec2>,
+    mut dernier_zoom_maj: Local<f32>,
 ) {
     let camera_transform = requete_camera.single();
-    let cam_x = camera_transform.translation.x;
-    let cam_y = camera_transform.translation.y;
+    let pos_actuelle = camera_transform.translation.truncate();
     let zoom = camera_transform.scale.x;
+
+    if pos_actuelle.distance(*derniere_pos_maj) < 40.0 && (zoom - *dernier_zoom_maj).abs() < 0.1 {
+        return;
+    }
+
+    *derniere_pos_maj = pos_actuelle;
+    *dernier_zoom_maj = zoom;
 
     let taille_secteur = 80.0;
     
@@ -163,8 +179,8 @@ fn garbage_collector_spatial(
     // On détruit les étoiles un peu PLUS LOIN que notre rayon de vision.
     let rayon_despawn = rayon_vision + 5;
 
-    let centre_grille_x = (cam_x / taille_secteur).round() as i32;
-    let centre_grille_y = (cam_y / taille_secteur).round() as i32;
+    let centre_grille_x = (pos_actuelle.x / taille_secteur).round() as i32;
+    let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
     // Détruire les entite
     for (entite, etoile) in requete_etoiles.iter() {
@@ -187,9 +203,11 @@ fn garbage_collector_spatial(
 
 
 fn gerer_lod_planetes(
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
+    requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
     mut requete_planetes: Query<&mut Visibility, With<Planete>>,
 ) {
+    let Ok(camera_transform) = requete_camera.get_single() else { return; };
+
     let zoom = requete_camera.single().scale.x;
     let seuil_lod = 3.5; 
 
