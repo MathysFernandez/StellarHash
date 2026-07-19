@@ -125,7 +125,7 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
 fn gerer_survol_souris(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
-    requete_etoiles: Query<(&Transform, &SystemeStellaire), With<Etoile>>,
+    requete_etoiles: Query<(&Transform, &SystemeStellaire, &Etoile)>,
     mut requete_panneau: Query<&mut Style, With<PanneauInfo>>, 
     mut requete_texte: Query<&mut Text, With<TexteInfo>>,
 ) {
@@ -140,16 +140,24 @@ fn gerer_survol_souris(
             
             let mut etoile_survolee = None;
 
+            // On calcule la case sur laquelle se trouve la souris
+            let taille_secteur = 80.0;
+            let souris_grille_x = (position_monde.x / taille_secteur).round() as i32;
+            let souris_grille_y = (position_monde.y / taille_secteur).round() as i32;
+            
             // On teste toutes les étoiles actuellement affichées pour voir si la souris est dessus
-            for (transform_etoile, systeme) in requete_etoiles.iter() {
-                // On calcule la distance entre le curseur et le centre de l'étoile
-                let distance = position_monde.distance(transform_etoile.translation.truncate());
-                
-                // Si la souris est à moins de 25 pixels de l'étoile (zone de tolérance pour faciliter le clic)
-                if distance < 25.0 {
-                    etoile_survolee = Some(systeme);
-                    break; // Dès qu'on trouve une étoile, on arrête de chercher
-                }
+            for (transform_etoile, systeme, etoile) in requete_etoiles.iter() {
+                // On ignore instantanément toutes les étoiles qui ne sont pas dans la case de la souris ou dans les cases voisines.
+                if (etoile.grille_x - souris_grille_x).abs() <= 1 && 
+                   (etoile.grille_y - souris_grille_y).abs() <= 1 {
+                    
+                    let distance = position_monde.distance(transform_etoile.translation.truncate());
+                    
+                    if distance < 25.0 {
+                        etoile_survolee = Some(systeme);
+                        break;
+                    }
+                } 
             }
 
             let mut style_panneau = requete_panneau.single_mut();
