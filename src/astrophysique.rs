@@ -1,14 +1,19 @@
 use bevy::prelude::Component;
 
-const PREFIXES_STELLAIRES: [&str; 6] = ["Kepler", "Gliese", "Trappist", "Wolf", "Barnard", "Sirius"];
+const PREFIXES_STELLAIRES: [&str; 6] =
+    ["Kepler", "Gliese", "Trappist", "Wolf", "Barnard", "Sirius"];
 
 #[derive(Debug, Clone, Copy)]
 // Les classes possibles pour chaque étoile
 pub enum ClasseSpectrale {
-    O, B, A, F, G, K, M
+    O,
+    B,
+    A,
+    F,
+    G,
+    K,
+    M,
 }
-
-
 
 // Ce composant sera attaché à chaque étoile générée
 #[derive(Component, Debug)]
@@ -16,21 +21,18 @@ pub struct SystemeStellaire {
     pub nom: String,
     pub classe: ClasseSpectrale,
     // 1.0 = la masse de notre Soleil
-    pub masse_solaire: f32, 
+    pub masse_solaire: f32,
     pub rayon_solaire: f32,
     pub nb_planetes: u8,
     pub age_milliards_annees: f32,
 }
 
-
-
 /// Convertit le hachage brut et les coordonnées en données astrophysiques
 pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStellaire {
-    
     // Détermination de la Classe Spectrale (Répartition réaliste)
     let classe = if probabilite > 0.998 {
         // Ultra rare
-        ClasseSpectrale::O 
+        ClasseSpectrale::O
     } else if probabilite > 0.99 {
         ClasseSpectrale::B
     } else if probabilite > 0.98 {
@@ -46,10 +48,8 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
         ClasseSpectrale::M
     };
 
-
-
     // On multiplie la probabilité et on ne garde que les décimales (ex: 0.9734 * 1000 = 973.4 -> 0.4)
-    // Cela nous donne une nouvelle valeur entre 0.0 et 1.0 pour varier les données 
+    // Cela nous donne une nouvelle valeur entre 0.0 et 1.0 pour varier les données
     let variation = (probabilite * 1000.0).fract();
 
     // Pour la masse et l'âge selon le type d'étoile
@@ -82,7 +82,7 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
         ClasseSpectrale::O | ClasseSpectrale::B => 0.1,
         _ => 1.0,
     };
-    
+
     let nb_planetes = ((variation * 10.0) * multiplicateur_planetes) as u8;
     // Limite entre 0 et 8 planètes
     let nb_planetes = nb_planetes.clamp(0, 8);
