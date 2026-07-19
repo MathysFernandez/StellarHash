@@ -206,20 +206,21 @@ fn gerer_lod_planetes(
     requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
     mut requete_planetes: Query<&mut Visibility, With<Planete>>,
 ) {
-    let Ok(camera_transform) = requete_camera.get_single() else { return; };
+    if let Ok(camera_transform) = requete_camera.get_single() {
 
-    let zoom = requete_camera.single().scale.x;
-    let seuil_lod = 3.5; 
+        let zoom = requete_camera.single().scale.x;
+        let seuil_lod = 3.5; 
 
-    let visibilite_voulue = if zoom > seuil_lod {
-        Visibility::Hidden
-    } else {
-        Visibility::Inherited
-    };
+        let visibilite_voulue = if zoom > seuil_lod {
+            Visibility::Hidden
+        } else {
+            Visibility::Inherited
+        };
 
-    for mut visibilite in requete_planetes.iter_mut() {
-        if *visibilite != visibilite_voulue {
-            *visibilite = visibilite_voulue; 
+        for mut visibilite in requete_planetes.iter_mut() {
+            if *visibilite != visibilite_voulue {
+                *visibilite = visibilite_voulue; 
+            }
         }
     }
 }
@@ -235,7 +236,7 @@ fn gerer_clic_etoile(
     touches_souris: Res<ButtonInput<MouseButton>>,
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
-    requete_etoiles: Query<(Entity, &Transform, &crate::astrophysique::SystemeStellaire, Option<&SystemeDeveloppe>), With<Etoile>>,
+    requete_etoiles: Query<(Entity, &Transform, &crate::astrophysique::SystemeStellaire, Option<&SystemeDeveloppe>, &Etoile)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 
@@ -248,7 +249,20 @@ fn gerer_clic_etoile(
     if let Some(position_curseur) = fenetre.cursor_position() {
         if let Some(position_monde) = camera.viewport_to_world_2d(camera_transform, position_curseur) {
             
-            for (entite, transform_etoile, systeme, developpe) in requete_etoiles.iter() {
+                        // Calcul de la case cliquée
+
+            let taille_secteur = 80.0;
+            let clic_grille_x = (position_monde.x / taille_secteur).round() as i32;
+            let clic_grille_y = (position_monde.y / taille_secteur).round() as i32;
+
+            for (entite, transform_etoile, systeme, developpe, etoile) in requete_etoiles.iter() {
+                // Filtre spatial immédiat
+                if (etoile.grille_x - clic_grille_x).abs() > 1 || 
+                   (etoile.grille_y - clic_grille_y).abs() > 1 {
+                    continue; 
+                }
+                
+                
                 let distance = position_monde.distance(transform_etoile.translation.truncate());
                 
                 // Si on clique sur une étoile (tolérance de 25 pixels)
