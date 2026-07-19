@@ -1,31 +1,22 @@
-use bevy::prelude::*;
 use bevy::input::mouse::MouseWheel;
+use bevy::prelude::*;
 
 // Le Plugin qui regroupe toute la logique de la caméra
-
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, initialiser_camera)
-           .add_systems(Update, (deplacer_camera, zoomer_camera));
+            .add_systems(Update, (deplacer_camera, zoomer_camera));
     }
 }
-
-
 
 #[derive(Component)]
 pub struct CameraPrincipale;
 
-
-
-
 fn initialiser_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera2dBundle::default(),
-        CameraPrincipale,
-    ));
+    commands.spawn((Camera2dBundle::default(), CameraPrincipale));
 }
 
 fn deplacer_camera(
@@ -34,13 +25,21 @@ fn deplacer_camera(
     mut requete_camera: Query<&mut Transform, With<CameraPrincipale>>,
 ) {
     let mut transform = requete_camera.single_mut();
-    let vitesse = 500.0 * transform.scale.x; 
+    let vitesse = 500.0 * transform.scale.x;
 
     let mut direction = Vec3::ZERO;
-    if touches.pressed(KeyCode::ArrowLeft) || touches.pressed(KeyCode::KeyA) { direction.x -= 1.0; }
-    if touches.pressed(KeyCode::ArrowRight) || touches.pressed(KeyCode::KeyD) { direction.x += 1.0; }
-    if touches.pressed(KeyCode::ArrowUp) || touches.pressed(KeyCode::KeyW) { direction.y += 1.0; }
-    if touches.pressed(KeyCode::ArrowDown) || touches.pressed(KeyCode::KeyS) { direction.y -= 1.0; }
+    if touches.pressed(KeyCode::ArrowLeft) || touches.pressed(KeyCode::KeyA) {
+        direction.x -= 1.0;
+    }
+    if touches.pressed(KeyCode::ArrowRight) || touches.pressed(KeyCode::KeyD) {
+        direction.x += 1.0;
+    }
+    if touches.pressed(KeyCode::ArrowUp) || touches.pressed(KeyCode::KeyW) {
+        direction.y += 1.0;
+    }
+    if touches.pressed(KeyCode::ArrowDown) || touches.pressed(KeyCode::KeyS) {
+        direction.y -= 1.0;
+    }
 
     if direction.length() > 0.0 {
         direction = direction.normalize();
