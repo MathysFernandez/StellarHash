@@ -2,7 +2,7 @@
 
 > A deterministic, procedurally generated 2D universe explorer built from scratch using Rust and the [Bevy Engine](https://bevyengine.org/).
 
-
+<img width="1586" height="538" alt="Image" src="https://github.com/user-attachments/assets/7851e4fb-531f-4c9c-b73b-aa53558634af" />
 
 ---
 ## 🚀 Overview
