@@ -25,7 +25,11 @@ fn deplacer_camera(
     mut requete_camera: Query<&mut Transform, With<CameraPrincipale>>,
 ) {
     let mut transform = requete_camera.single_mut();
-    let vitesse = 500.0 * transform.scale.x;
+    let mut vitesse = 500.0 * transform.scale.x;
+
+    if touches.pressed(KeyCode::ShiftLeft) {
+        vitesse*=2.0;
+    }
 
     let mut direction = Vec3::ZERO;
     if touches.pressed(KeyCode::ArrowLeft) || touches.pressed(KeyCode::KeyA) {
