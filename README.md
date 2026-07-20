@@ -1,11 +1,70 @@
-# StellarHash
+# StellarHash 🚀
 
-StellarHash est une simulation spatiale 2D mettant en œuvre des techniques avancées de génération procédurale déterministe. Développé en Rust avec le moteur Bevy, ce projet contourne les limites de la mémoire (RAM) liées à la création d'environnements massifs en utilisant une approche Just-In-Time.
-
-Au lieu de pré-calculer et de stocker les données d'une galaxie, StellarHash s'appuie sur une fonction de hachage de coordonnées (X, Y) couplée à une graine globale (Seed) pour générer les systèmes stellaires à la volée lors des déplacements de la caméra. L'utilisation du paradigme ECS (Entity-Component-System) permet de maximiser les performances multi-threadées lors de l'instanciation et de la destruction des entités cosmiques.
+> A deterministic, procedurally generated 2D universe explorer built from scratch using Rust and the [Bevy Engine](https://bevyengine.org/).
 
 
-## Use:
+
+---
+## 🚀 Overview
+StellarHash utilizes a custom spatial hashing algorithm to generate an infinite, persistent universe.    
+
+Every set of coordinates yields the exact same star system based on a global seed, ensuring deterministic exploration without the need to save massive amounts of data.    
+
+The engine is highly optimized, featuring dynamic memory management, spatial grid filtering, and real-time Level of Detail (LOD) to maintain a smooth frame rate even with thousands of visible celestial bodies.
+
+
+---
+## Features
+- Infinite Procedural Generation: Seamlessly explore a boundless universe. Stars are generated dynamically as you move the camera and cleaned up automatically to preserve memory.
+
+- Realistic Stellar Classification: Stars are classified from `O` to `M` (Morgan-Keenan system), dictating their color, radius, mass, age, and planetary likelihood.
+
+- Interactive Star Systems: Click on any generated star to reveal its planetary system. Planets follow Kepler-inspired orbital mechanics with real-time trigonometric animations.
+
+- Dynamic Hover UI: Hover over any star to instantly intercept its telemetry data (Name, Mass, Age, Planet count).
+
+- Deep Space Transmissions: A dynamic UI panel broadcasts random, real-world astrophysics facts while you explore.
+
+- Highly Optimized: Engineered for maximum performance (60+ FPS) using spatial grid filtering, Level of Detail (LOD) rendering, and automated garbage collection.
+
+
+
+---
+## Installation & Build
+
+### Prerequisites
+- [Rust](https://www.rust-lang.org/tools/install)
+- Bevy dependencies for Linux (e.g., `g++`, `pkg-config`, `libx11-dev`, `libasound2-dev`, `libudev-dev`)
+
+### Running Locally
+Clone the repository and run the project in **release mode** for optimal performance:
+
+```bash
+git clone [https://github.com/MathysFernandez/StellarHash.git](https://github.com/MathysFernandez/StellarHash.git)
+```
+
+```bash
+cd StellarHash
+```
+
 ```bash
 cargo run --release
 ```
+
+---
+## Project Architecture
+* `main.rs`: Entry point and Bevy App configuration.
+* `univers.rs`: Core procedural generation loop, spatial caching (`Local<T>`), LOD management, and garbage collection.
+* ```generation.rs```: Deterministic spatial hashing mathematics (bitwise operations).
+* `astrophysique.rs`: Data models and procedural rules for star classification.
+* `ui.rs`: Spatial grid raycasting, hover detection, and UI rendering.
+* `camera.rs`: 2D movement and scaling logic.
+
+
+---
+## Note
+
+> If you are downloading the pre-compiled binary release, ensure the assets/ and fonts/ directories remain at the root level alongside the executable for the UI and text to load properly.
+
+---
+
