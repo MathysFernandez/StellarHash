@@ -1,0 +1,55 @@
+name: Build and Release StellarHash
+
+# Ce workflow s'active uniquement quand on pousse un tag qui commence par "v"
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build and Release for Linux
+    runs-on: ubuntu-latest
+    
+    # Donne les permissions au robot GitHub de créer la page de release
+    permissions:
+      contents: write
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Installer les dépendances système de Bevy (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+
+      - name: Installer Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Mettre en cache Cargo (accélère les futures compilations)
+        uses: Swatinem/rust-cache@v2
+
+      - name: Compiler en mode Release
+        run: cargo build --release
+
+      - name: Préparer l'archive du jeu
+        run: |
+          mkdir distribution
+
+          # On copie l'exécutable
+          cp target/release/StellarHash distribution/
+          
+          # On copie le dossier contenant la police et les anecdotes
+          cp -r assets distribution/
+          cp -r fonts distribution/
+
+          # On zippe le tout
+          cd distribution
+          zip -r ../StellarHash_Linux.zip *
+
+      - name: Publier la Release sur GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: StellarHash_Linux.zip
+          generate_release_notes: true
