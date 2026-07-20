@@ -28,7 +28,7 @@ fn deplacer_camera(
     let mut vitesse = 500.0 * transform.scale.x;
 
     if touches.pressed(KeyCode::ShiftLeft) {
-        vitesse*=2.0;
+        vitesse *= 2.0;
     }
 
     let mut direction = Vec3::ZERO;
