@@ -64,7 +64,7 @@ cargo run --release
 ---
 ## Note
 
-> If you are downloading the pre-compiled binary release, ensure the assets/ and fonts/ directories remain at the root level alongside the executable for the UI and text to load properly.
+> If you are downloading the pre-compiled binary release, ensure the **assets/** and **fonts/** directories remain at the root level alongside the executable for the UI and text to load properly.
 
 ---
 
