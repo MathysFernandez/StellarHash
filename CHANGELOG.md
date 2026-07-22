@@ -4,6 +4,10 @@
 
 - Create changelog.yml 
 - Add changelog.yml to automatically update the changelog.md
+
+### ⚙️ Miscellaneous Tasks
+
+- *(changelog)* Mise à jour du CHANGELOG
 ## [0.1] - 2026-07-20
 
 ### 🚀 Features
