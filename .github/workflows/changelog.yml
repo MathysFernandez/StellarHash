@@ -28,9 +28,11 @@ jobs:
           args: -o CHANGELOG.md
         env:
           OUTPUT: CHANGELOG.md
-
-      - name: Commit et Push automatique
-        uses: stefanzweifel/git-auto-commit-action@v5
+          
+      - name: 📤 Créer une Pull Request pour le Changelog
+        uses: peter-evans/create-pull-request@v6
         with:
-          commit_message: "chore(changelog): mise à jour du CHANGELOG [skip ci]"
-          file_pattern: CHANGELOG.md
+          commit-message: "chore(changelog): mise à jour du CHANGELOG"
+          title: "Mise à jour automatique du Changelog"
+          branch: "chore/update-changelog"
+          body: "Cette PR a été générée automatiquement par git-cliff."
