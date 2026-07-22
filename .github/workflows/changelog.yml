@@ -1,1 +1,36 @@
+name: Generate Changelog
 
+on:
+  push:
+    branches:
+      - main
+    # The CHANGELOG.md file is ignored to avoid an infinite loop.
+    paths-ignore:
+      - 'CHANGELOG.md'
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      # Allows the GitHub bot to make a commit
+      contents: write 
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          # Essential for git-cliff to read the entire history.
+          fetch-depth: 0
+
+      - name: Génération du Changelog
+        uses: orhun/git-cliff-action@v3
+        with:
+          args: -o CHANGELOG.md
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Commit et Push automatique
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(changelog): mise à jour du CHANGELOG [skip ci]"
+          file_pattern: CHANGELOG.md
