@@ -1,5 +1,5 @@
 name: Generate Changelog.md
-
+ 
 on:
   push:
     branches:
