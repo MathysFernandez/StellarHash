@@ -14,6 +14,7 @@ jobs:
     permissions:
       # Allows the GitHub bot to make a commit
       contents: write 
+      pull-requests: write
 
     steps:
       - name: Checkout du code
