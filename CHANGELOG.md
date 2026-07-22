@@ -1,40 +1,34 @@
-# Changelog
+## [unreleased]
 
-> [!tip] Toutes les modifications importantes de ce projet seront documentées dans ce fichier.     
-Seul les modification entre 2 versions sont intégré au `CHANGELOG.md`.    
-Les recherches ne sont pas intégré au `CHANGELOG.md`.    
+### 🚀 Features
 
---- 
+- Create changelog.yml 
+- Add changelog.yml to automatically update the changelog.md
+## [0.1] - 2026-07-20
 
-## [0.1] Bases - 2026-14-07
+### 🚀 Features
 
-### 🚀 added
-- Création d'une première version readme
-- Affichage FPS
-- Système de hachage pour une génération Infini
-- Interface infini
-- Visibilité sur les détails des systèmes
-- Visibilité des systèmes solaires
-- Affichage d'anecdote
+- Using shift key for accelerate the camera
+- Add release workflow (release.yml)
 
-### ♻️ changed
-- 
+### 🐛 Bug Fixes
 
-### 🐛 fixed
-- 
+- Optimisation with Local<T>
+- Optimisation code
+- Optimisation code
+- Branch selected for the workflow protection
+- Worflows to workflows -> i forgot the k letter
+- Reorganization files
+- Warning of rust
+- Fmt --all for automate source code formatting
+- Correct the spelling
 
+### 💼 Other
 
+- De l'organisation
+- Just add empty file ci.yml
+- Adding content to CI.yml
 
----
-## [0.2] Interface - XXXX-XX-XX
+### ⚙️ Miscellaneous Tasks
 
-### 🚀 added
-- 
-
-### ♻️ changed
-- 
-
-### 🐛 fixed
-- 
-
-
+- To enable warnings
