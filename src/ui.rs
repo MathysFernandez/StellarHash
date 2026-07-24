@@ -272,3 +272,182 @@ fn mettre_a_jour_anecdotes(
         texte.sections[0].value = format!("{}", lignes[index_aleatoire]);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::diagnostic::Diagnostic;
+
+    #[test]
+    fn test_initialiser_fps_cree_composants() {
+        // Create a new empty Bevy App
+        let mut app = App::new();
+
+        // Add the AssetServer plugin (required for loading fonts)
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        app.init_asset::<Font>();
+
+        // Add our system to the Startup schedule
+        app.add_systems(Startup, initialiser_fps);
+
+        // Run the app for one frame to execute the Startup schedule
+        app.update();
+
+        // Query to check if a node with TexteFps component was created
+        let mut requete_texte = app.world_mut().query_filtered::<&Text, With<TexteFps>>();
+
+        // If the query fails to find exactly one entity, the test will panic
+        let texte = requete_texte.single(app.world());
+
+        // Verify that the initial text is correct
+        assert_eq!(texte.sections[0].value, "FPS: calcul...");
+    }
+
+    #[test]
+    fn test_initialiser_fps_position_correcte() {
+        let mut app = App::new();
+
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        app.init_asset::<Font>();
+
+        app.add_systems(Startup, initialiser_fps);
+        app.update();
+
+        // The TexteFps is a child of the main NodeBundle.
+        // We need to find the parent node and check its style.
+        // First, let's find the entity with TexteFps
+        let mut query = app.world_mut().query_filtered::<Entity, With<TexteFps>>();
+        let entity_texte = query.single(app.world());
+
+        // Now, get its Parent component
+        let parent_component = app.world().get::<Parent>(entity_texte).unwrap();
+        let entity_parent = parent_component.get();
+
+        // Finally, get the Style component of the parent node
+        let style = app.world().get::<Style>(entity_parent).unwrap();
+
+        // Assert the positioning values we set in the function
+        assert_eq!(style.position_type, PositionType::Absolute);
+        assert_eq!(style.top, Val::Px(10.0));
+        assert_eq!(style.left, Val::Px(10.0));
+    }
+
+    #[test]
+    fn test_mettre_a_jour_fps_affiche_valeur_arrondie() {
+        let mut app = App::new();
+
+        // Instancier l'entité texte avec les composants requis
+        let entite = app
+            .world_mut()
+            .spawn((
+                TextBundle::from_section("FPS: calcul...", TextStyle::default()),
+                TexteFps,
+            ))
+            .id();
+
+        // Simuler les diagnostics du moteur
+        let mut diagnostics = DiagnosticsStore::default();
+        let mut diagnostic_fps = Diagnostic::new(FrameTimeDiagnosticsPlugin::FPS);
+
+        // On injecte manuellement une mesure factice de FPS (ex: 60.48)
+        diagnostic_fps.add_measurement(bevy::diagnostic::DiagnosticMeasurement {
+            time: bevy::utils::Instant::now(),
+            value: 60.48,
+        });
+        diagnostics.add(diagnostic_fps);
+
+        // On insère cette fausse base de données dans l'application de test
+        app.insert_resource(diagnostics);
+
+        // Ajouter et exécuter notre système
+        app.add_systems(Update, mettre_a_jour_fps);
+        app.update();
+
+        // Vérifier le résultat
+        let texte = app.world().get::<Text>(entite).unwrap();
+
+        // Le format {:.1} de votre système doit arrondir 60.48 à 60.5
+        assert_eq!(texte.sections[0].value, "FPS: 60.5");
+    }
+
+    #[test]
+    fn test_mettre_a_jour_fps_ignore_si_pas_de_donnees() {
+        let mut app = App::new();
+
+        // On démarre avec le texte par défaut
+        let entite = app
+            .world_mut()
+            .spawn((
+                TextBundle::from_section("FPS: calcul...", TextStyle::default()),
+                TexteFps,
+            ))
+            .id();
+
+        // On prépare le conteneur de FPS, mais cette fois on n'ajoute AUCUNE mesure
+        let mut diagnostics = DiagnosticsStore::default();
+        let diagnostic_fps = Diagnostic::new(FrameTimeDiagnosticsPlugin::FPS);
+        diagnostics.add(diagnostic_fps);
+        app.insert_resource(diagnostics);
+
+        app.add_systems(Update, mettre_a_jour_fps);
+        app.update();
+
+        // On récupère le texte après l'exécution du système
+        let texte = app.world().get::<Text>(entite).unwrap();
+
+        // Puisque `fps.smoothed()` a renvoyé None, le texte n'a pas dû changer
+        assert_eq!(texte.sections[0].value, "FPS: calcul...");
+    }
+
+    #[test]
+    fn test_initialiser_panneau_info_est_cache_par_defaut() {
+        let mut app = App::new();
+
+        // Configuration indispensable pour charger la police sans erreur
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        app.init_asset::<Font>();
+
+        // Ajout et exécution du système
+        app.add_systems(Startup, initialiser_panneau_info);
+        app.update();
+
+        // On récupère le composant Style de notre panneau d'information
+        let mut requete_panneau = app
+            .world_mut()
+            .query_filtered::<&Style, With<PanneauInfo>>();
+
+        // S'il n'y a pas exactement un PanneauInfo, le test va échouer
+        let style_panneau = requete_panneau.single(app.world());
+
+        // VÉRIFICATIONS CRITIQUES :
+        // Le panneau DOIT être invisible (Display::None) au démarrage
+        assert_eq!(style_panneau.display, Display::None);
+
+        // Le panneau doit avoir un positionnement absolu pour flotter sur l'écran
+        assert_eq!(style_panneau.position_type, PositionType::Absolute);
+
+        // Les éléments internes doivent être empilés en colonne
+        assert_eq!(style_panneau.flex_direction, FlexDirection::Column);
+    }
+
+    #[test]
+    fn test_initialiser_panneau_info_cree_le_texte_enfant() {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, AssetPlugin::default()));
+        app.init_asset::<Font>();
+
+        app.add_systems(Startup, initialiser_panneau_info);
+        app.update();
+
+        // On cherche l'entité qui possède le marqueur TexteInfo
+        let mut requete_texte = app.world_mut().query_filtered::<&Text, With<TexteInfo>>();
+        let texte = requete_texte.single(app.world());
+
+        // On vérifie le contenu par défaut
+        assert_eq!(texte.sections[0].value, "Données Stellaire");
+
+        // On vérifie le style du texte (taille et couleur)
+        assert_eq!(texte.sections[0].style.font_size, 18.0);
+        assert_eq!(texte.sections[0].style.color, Color::WHITE);
+    }
+}
