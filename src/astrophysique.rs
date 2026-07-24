@@ -57,31 +57,17 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
         // (Masse min + variation, Âge min + variation)
 
         // Vies très courtes
-        ClasseSpectrale::O => (
-            16.0 + variation * 74.0,
-            0.001 + variation * 0.01),
-        ClasseSpectrale::B => (
-            2.1 + variation * 13.9,
-            0.01 + variation * 0.1),
-        ClasseSpectrale::A => (
-            1.4 + variation * 0.7,
-            0.1 + variation * 0.9),
-        ClasseSpectrale::F => (
-            1.04 + variation * 0.36,
-            1.0 + variation * 2.0),
+        ClasseSpectrale::O => (16.0 + variation * 74.0, 0.001 + variation * 0.01),
+        ClasseSpectrale::B => (2.1 + variation * 13.9, 0.01 + variation * 0.1),
+        ClasseSpectrale::A => (1.4 + variation * 0.7, 0.1 + variation * 0.9),
+        ClasseSpectrale::F => (1.04 + variation * 0.36, 1.0 + variation * 2.0),
 
         // Comme notre Soleil
-        ClasseSpectrale::G => (
-            0.8 + variation * 0.24,
-            4.0 + variation * 6.0),
-        ClasseSpectrale::K => (
-            0.45 + variation * 0.35,
-            10.0 + variation * 15.0),
+        ClasseSpectrale::G => (0.8 + variation * 0.24, 4.0 + variation * 6.0),
+        ClasseSpectrale::K => (0.45 + variation * 0.35, 10.0 + variation * 15.0),
 
         // Vies quasi éternelles
-        ClasseSpectrale::M => (
-            0.08 + variation * 0.37,
-            20.0 + variation * 80.0),
+        ClasseSpectrale::M => (0.08 + variation * 0.37, 20.0 + variation * 80.0),
     };
 
     // Approximation simple pour calculer le rayon en fonction de la masse
@@ -112,9 +98,6 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
         age_milliards_annees: age,
     }
 }
-
-
-
 
 // --- START UNIT TESTS ---
 #[cfg(test)]
@@ -173,7 +156,6 @@ mod tests {
     }
     // ---End of threshold verification---
 
-
     // ---Start floating-point (f32) imprecision.---
     // Using .fract() on floats can introduce slight inaccuracies (e.g., 0.3999999 instead of 0.4).
     // Therefore, avoid testing for exact values; instead, check if the value falls within a specific range.
@@ -182,21 +164,23 @@ mod tests {
         // On génère une étoile de type G (probabilité > 0.96)
         let probabilite = 0.965;
         let systeme = generer_caracteristiques(0, 0, probabilite);
-        
+
         assert_eq!(systeme.classe, ClasseSpectrale::G);
-        
+
         // Classe G : masse entre 0.8 et (0.8 + 0.24 = 1.04)
         assert!(systeme.masse_solaire >= 0.8);
         assert!(systeme.masse_solaire <= 1.04);
-        
+
         // Pour le rayon, on compare l'écart avec l'epsilon de f32
         let rayon_calcule = systeme.masse_solaire.powf(0.8);
         let difference = (systeme.rayon_solaire - rayon_calcule).abs();
-        
-        assert!(difference < f32::EPSILON, "Le rayon ne correspond pas à la formule mathématique");
+
+        assert!(
+            difference < f32::EPSILON,
+            "Le rayon ne correspond pas à la formule mathématique"
+        );
     }
     // ---End floating-point (f32) imprecision.---
-
 
     // ---Start handling signs---
     // Ensure that negative coordinates do not cause the name generation to fail.
@@ -204,13 +188,11 @@ mod tests {
     fn test_coordonnees_negatives_generent_noms_valides() {
         let systeme_positif = generer_caracteristiques(15, 30, 0.96);
         let systeme_negatif = generer_caracteristiques(-15, -30, 0.96);
-        
+
         // Thanks to x.abs() and y.abs(), negative coordinates should yield the same name
         // as their absolute positive equivalents.
         assert_eq!(systeme_positif.nom, systeme_negatif.nom);
     }
     // ---End handling signs---
-
-
 }
 // --- END UNIT TESTS ---
