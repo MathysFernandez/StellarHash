@@ -420,13 +420,13 @@ mod tests {
         let style_panneau = requete_panneau.single(app.world());
 
         // VÉRIFICATIONS CRITIQUES :
-        // Le panneau DOIT être invisible (Display::None) au démarrage[cite: 1]
+        // Le panneau DOIT être invisible (Display::None) au démarrage
         assert_eq!(style_panneau.display, Display::None);
 
-        // Le panneau doit avoir un positionnement absolu pour flotter sur l'écran[cite: 1]
+        // Le panneau doit avoir un positionnement absolu pour flotter sur l'écran
         assert_eq!(style_panneau.position_type, PositionType::Absolute);
 
-        // Les éléments internes doivent être empilés en colonne[cite: 1]
+        // Les éléments internes doivent être empilés en colonne
         assert_eq!(style_panneau.flex_direction, FlexDirection::Column);
     }
 
@@ -443,10 +443,10 @@ mod tests {
         let mut requete_texte = app.world_mut().query_filtered::<&Text, With<TexteInfo>>();
         let texte = requete_texte.single(app.world());
 
-        // On vérifie le contenu par défaut[cite: 1]
+        // On vérifie le contenu par défaut
         assert_eq!(texte.sections[0].value, "Données Stellaire");
 
-        // On vérifie le style du texte (taille et couleur)[cite: 1]
+        // On vérifie le style du texte (taille et couleur)
         assert_eq!(texte.sections[0].style.font_size, 18.0);
         assert_eq!(texte.sections[0].style.color, Color::WHITE);
     }
