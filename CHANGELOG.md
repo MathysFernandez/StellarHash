@@ -5,8 +5,28 @@
 - Create changelog.yml 
 - Add changelog.yml to automatically update the changelog.md
 
+### 📚 Documentation
+
+- Add CODE_OF_CONDUCT.MD
+- Add contributing.md
+- *(roadmap)* Add ROADMAP.mp introduction and initial milestones
+
+### 🎨 Styling
+
+- *(astrophysique)* Spacing adjustment
+
+### 🧪 Testing
+
+- Add test units on astrophysique file
+- Add test units on camera file
+- Add test units on generation file
+- Add test units on ui file
+- Add test units in univers file
+- Add test units in main file
+
 ### ⚙️ Miscellaneous Tasks
 
+- *(changelog)* Mise à jour du CHANGELOG
 - *(changelog)* Mise à jour du CHANGELOG
 ## [0.1] - 2026-07-20
 
