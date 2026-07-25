@@ -21,12 +21,12 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 - [ ] Configure GitHub Actions.
 - [ ] Enable `cargo fmt`.
 - [ ] Enable `cargo clippy`.
-- [ ] Add unit tests for hashing.
+- [X] Add unit tests for hashing.
 - [ ] Configure project documentation.
 
 ### Definition of Done
 
-- [ ] `cargo test` passes.
+- [X] `cargo test` passes.
 - [ ] `cargo clippy -- -D warnings` passes.
 - [ ] `cargo fmt --check` passes.
 - [X] Same seed always produces identical output.
