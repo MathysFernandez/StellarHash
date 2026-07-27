@@ -4,10 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-# On importe Bevy
+# On importe Bevy pour l'affichage
 bevy = "0.14"
+# On importe Criterion pour les tests
+criterion = "0.5"
 
 # On active les optimisations au maximum pour la version finale
 [profile.release]
 opt-level = 3
 lto = "thin"
+
+[[bench]]
+name = "generationHashageBench"
+harness = false

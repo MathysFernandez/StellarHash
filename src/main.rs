@@ -1,10 +1,8 @@
 use bevy::prelude::*;
 
-mod astrophysique;
-mod camera;
-mod generation;
-mod ui;
-mod univers;
+use StellarHash::camera;
+use StellarHash::ui;
+use StellarHash::univers;
 
 fn main() {
     App::new()
