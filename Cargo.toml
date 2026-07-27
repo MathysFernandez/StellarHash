@@ -17,3 +17,7 @@ lto = "thin"
 [[bench]]
 name = "generationHashageBench"
 harness = false
+
+[[bench]]
+name = "garbageCollectorBench"
+harness = false

@@ -125,7 +125,7 @@ fn generer_univers_dynamique(
     }
 }
 
-fn garbage_collector_spatial(
+pub fn garbage_collector_spatial(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
     requete_etoiles: Query<(Entity, &Etoile)>,

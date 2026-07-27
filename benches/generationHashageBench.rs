@@ -2,19 +2,12 @@ use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 use StellarHash::generation::calculer_hachage_spatial;
 
-
 fn bench_hachage_spatial(c: &mut Criterion) {
     let graine = 9999;
 
     // Une seule coordonnée statique (Temps brut de l'algorithme)
     c.bench_function("hachage_spatial_unique", |b| {
-        b.iter(|| {
-            calculer_hachage_spatial(
-                black_box(42), 
-                black_box(-84), 
-                black_box(graine),
-            )
-        })
+        b.iter(|| calculer_hachage_spatial(black_box(42), black_box(-84), black_box(graine)))
     });
 
     // Une grille de 10x10 (Simulation réaliste avec effet de cache processeur)
@@ -24,9 +17,9 @@ fn bench_hachage_spatial(c: &mut Criterion) {
             for x in 0..10 {
                 for y in 0..10 {
                     black_box(calculer_hachage_spatial(
-                        black_box(x), 
-                        black_box(y), 
-                        black_box(graine)
+                        black_box(x),
+                        black_box(y),
+                        black_box(graine),
                     ));
                 }
             }
