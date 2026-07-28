@@ -1,0 +1,42 @@
+name: ✨ Feature Request
+description: Suggest a new idea or enhancement for the project.
+body:
+  - type: markdown
+    attributes:
+      value: "Thank you for taking the time to suggest an improvement!"
+  
+  # A dropdown menu
+  - type: dropdown
+    id: type_of_idea
+    attributes:
+      label: "What type of contribution is this?"
+      options:
+        - feat
+        - fix
+        - ci
+        - build
+        - chore
+        - docs
+        - style
+        - perf
+        - test
+    validations:
+      required: true
+      
+  - type: textarea
+    id: problem_description
+    attributes:
+      label: "Description of the feature"
+      description: "A clear and concise description of the idea."
+      placeholder: "I'm always frustrated when I have to... / It would be easier to..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: "Contribution"
+      description: "Would you be willing to help implement this feature?"
+      options:
+        - label: "Yes, I want to work on this and submit a Pull Request!"
+          required: false

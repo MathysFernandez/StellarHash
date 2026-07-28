@@ -41,10 +41,10 @@ impl Plugin for UiPlugin {
 struct TexteFps;
 
 #[derive(Component)]
-struct PanneauInfo;
+pub struct PanneauInfo;
 
 #[derive(Component)]
-struct TexteInfo;
+pub struct TexteInfo;
 
 #[derive(Resource)]
 struct ChronoAnecdote(Timer);
@@ -130,7 +130,7 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
         });
 }
 
-fn gerer_survol_souris(
+pub fn gerer_survol_souris(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
     requete_etoiles: Query<(&Transform, &SystemeStellaire, &Etoile)>,
