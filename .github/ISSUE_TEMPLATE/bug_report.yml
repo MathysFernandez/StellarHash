@@ -1,0 +1,24 @@
+name: 🐛 Report a bug
+description: Use this form to tell us that something broke.
+title: "fix: "
+labels: [bugs]
+body:
+  - type: dropdown
+    id: systeme_exploitation
+    attributes:
+      label: "What operating system are you on ?"
+      options:
+        - Ubuntu / Linux
+        - Windows
+        - macOS
+    validations:
+      required: true
+
+  - type: textarea
+    id: description_bug
+    attributes:
+      label: "Detailed description of the issue"
+      description: "Explain step by step what you were doing before the crash."
+      placeholder: "1. I clicked on...\n2. Then the screen displayed..."
+    validations:
+      required: true
