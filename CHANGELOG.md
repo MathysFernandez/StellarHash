@@ -25,12 +25,21 @@
 - Add test units on ui file
 - Add test units in univers file
 - Add test units in main file
+- Add a benchmarking function for hashing
+- Improve a hashing benchmark function
+- Add a benchmarking function for garbage collector
+- Add a benchmarking function for generate characteristic
+- Add a benchmarking function for hovering the mouse over a star
+- Add a benchmarking function for orbit preparation function
 
 ### ⚙️ Miscellaneous Tasks
 
 - *(changelog)* Mise à jour du CHANGELOG
 - *(changelog)* Mise à jour du CHANGELOG
 - *(changelog)* Mise à jour du CHANGELOG
+- *(changelog)* Mise à jour du CHANGELOG
+- Add a Issues Templates: Report a bug
+- Add a rename_issues.yml file 
 ## [0.1] - 2026-07-20
 
 ### 🚀 Features
