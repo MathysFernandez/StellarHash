@@ -29,3 +29,7 @@ harness = false
 [[bench]]
 name = "uiSurvolBench"
 harness = false
+
+[[bench]]
+name = "orbitesBench"
+harness = false

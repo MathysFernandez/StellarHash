@@ -266,7 +266,10 @@ fn gerer_clic_etoile(
     }
 }
 
-fn animer_orbites(temps: Res<Time>, mut requete_planetes: Query<(&mut Transform, &mut Planete)>) {
+pub fn animer_orbites(
+    temps: Res<Time>,
+    mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
+) {
     for (mut transform, mut planete) in requete_planetes.iter_mut() {
         planete.angle_actuel += planete.vitesse_orbite * temps.delta_seconds();
         transform.translation.x = planete.rayon_orbite * planete.angle_actuel.cos();
