@@ -1,0 +1,26 @@
+name: 🐛 Report a bug
+description: Use this form to tell us that something broke.
+labels: [bugs]
+body:
+  # A dropdown menu for the OS
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: "What operating system are you on?"
+      options:
+        - Ubuntu / Linux
+        - Windows
+        - macOS
+    validations:
+      # Makes the response mandatory to submit the issue
+      required: true
+
+  # A specific textarea for the bug
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: "Detailed description of the issue"
+      description: "Explain step by step what you were doing before the crash."
+      placeholder: "1. I clicked on...\n2. Then the screen displayed..."
+    validations:
+      required: true
