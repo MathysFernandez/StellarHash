@@ -25,3 +25,7 @@ harness = false
 [[bench]]
 name = "astrophysiqueBench"
 harness = false
+
+[[bench]]
+name = "uiSurvolBench"
+harness = false
