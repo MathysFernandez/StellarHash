@@ -10,6 +10,8 @@
 - Add CODE_OF_CONDUCT.MD
 - Add contributing.md
 - *(roadmap)* Add ROADMAP.mp introduction and initial milestones
+- Add Cargo_doc.pdf
+- Update Cargo_doc_[EN]
 
 ### 🎨 Styling
 
@@ -26,6 +28,7 @@
 
 ### ⚙️ Miscellaneous Tasks
 
+- *(changelog)* Mise à jour du CHANGELOG
 - *(changelog)* Mise à jour du CHANGELOG
 - *(changelog)* Mise à jour du CHANGELOG
 ## [0.1] - 2026-07-20
