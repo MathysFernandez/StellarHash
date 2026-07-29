@@ -4,7 +4,7 @@ const PREFIXES_STELLAIRES: [&str; 6] =
     ["Kepler", "Gliese", "Trappist", "Wolf", "Barnard", "Sirius"];
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-// Les classes possibles pour chaque étoile
+// The possible classes for each star
 pub enum ClasseSpectrale {
     O,
     B,
@@ -15,7 +15,7 @@ pub enum ClasseSpectrale {
     M,
 }
 
-// Ce composant sera attaché à chaque étoile générée
+// This component will be attached to each generated star
 #[derive(Component, Debug)]
 pub struct SystemeStellaire {
     pub nom: String,
@@ -27,7 +27,7 @@ pub struct SystemeStellaire {
     pub age_milliards_annees: f32,
 }
 
-/// Convertit le hachage brut et les coordonnées en données astrophysiques
+/// Converts the raw hash and coordinates into astrophysical data
 pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStellaire {
     // Détermination de la Classe Spectrale (Répartition réaliste)
     let classe = if probabilite > 0.998 {
