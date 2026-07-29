@@ -133,9 +133,12 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
 pub fn gerer_survol_souris(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
-    requete_etoiles: Query<(&Transform, &SystemeStellaire, &Etoile)>,
+
+    requete_etoiles: Query<(Entity, &Transform, &SystemeStellaire, &Etoile)>,
     mut requete_panneau: Query<&mut Style, With<PanneauInfo>>,
     mut requete_texte: Query<&mut Text, With<TexteInfo>>,
+
+    mut derniere_etoile_survolee: Local<Option<Entity>>,
 ) {
     let fenetre = requete_fenetre.single();
     let (camera, camera_transform) = requete_camera.single();
@@ -154,7 +157,7 @@ pub fn gerer_survol_souris(
             let souris_grille_y = (position_monde.y / taille_secteur).round() as i32;
 
             // On teste toutes les étoiles actuellement affichées pour voir si la souris est dessus
-            for (transform_etoile, systeme, etoile) in requete_etoiles.iter() {
+            for (entite, transform_etoile, systeme, etoile) in requete_etoiles.iter() {
                 // On ignore instantanément toutes les étoiles qui ne sont pas dans la case de la souris ou dans les cases voisines.
                 if (etoile.grille_x - souris_grille_x).abs() <= 1
                     && (etoile.grille_y - souris_grille_y).abs() <= 1
@@ -162,7 +165,7 @@ pub fn gerer_survol_souris(
                     let distance = position_monde.distance(transform_etoile.translation.truncate());
 
                     if distance < 25.0 {
-                        etoile_survolee = Some(systeme);
+                        etoile_survolee = Some((entite, systeme));
                         break;
                     }
                 }
@@ -172,21 +175,26 @@ pub fn gerer_survol_souris(
             let mut texte = requete_texte.single_mut();
 
             // Si on survole une étoile, on met à jour le texte et on affiche le panneau sous la souris
-            if let Some(systeme) = etoile_survolee {
+            if let Some((entite_actuelle, systeme)) = etoile_survolee {
                 style_panneau.display = Display::Flex;
 
                 // On décalle un peu le panneau pour qu'il ne soit pas caché par le curseur de la souris
                 style_panneau.left = Val::Px(position_curseur_ecran.x + 15.0);
                 style_panneau.top = Val::Px(position_curseur_ecran.y + 15.0);
 
-                texte.sections[0].value = format!(
-                    "Systeme : {}\nClasse : {:?}\nMasse Solaire : {:.2} MS\nPlanetes : {}\nAge : {:.1} Ga",
-                    systeme.nom,
-                    systeme.classe,
-                    systeme.masse_solaire,
-                    systeme.nb_planetes,
-                    systeme.age_milliards_annees
-                );
+                if *derniere_etoile_survolee != Some(entite_actuelle) {
+                    texte.sections[0].value = format!(
+                        "Systeme : {}\nClasse : {:?}\nMasse Solaire : {:.2} MS\nPlanetes : {}\nAge : {:.1} Ga",
+                        systeme.nom,
+                        systeme.classe,
+                        systeme.masse_solaire,
+                        systeme.nb_planetes,
+                        systeme.age_milliards_annees
+                    );
+
+                    // On met à jour l'historique
+                    *derniere_etoile_survolee = Some(entite_actuelle);
+                }
             } else {
                 // Si on est dans le vide spatial, on cache le panneau
                 style_panneau.display = Display::None;
