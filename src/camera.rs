@@ -2,6 +2,7 @@ use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
 // The plugin that encapsulates all camera logicpub struct CameraPlugin;
+pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
