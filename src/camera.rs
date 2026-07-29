@@ -1,8 +1,7 @@
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
-// Le Plugin qui regroupe toute la logique de la caméra
-pub struct CameraPlugin;
+// The plugin that encapsulates all camera logicpub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
@@ -139,7 +138,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<ButtonInput<KeyCode>>();
 
-        // On ajoute l'annotation ": Time" pour guider le compilateur
+        // We add the ": Time" annotation to guide the compiler
         let mut time: Time = Time::default();
         time.advance_by(Duration::from_secs_f32(0.1));
         app.insert_resource(time);
@@ -150,7 +149,7 @@ mod tests {
             .id();
         app.add_systems(Update, deplacer_camera);
 
-        // On simule l'appui sur D (droite) ET sur Shift Gauche
+        // Simulate pressing D (right) AND Left Shift
         let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         input.press(KeyCode::KeyD);
         input.press(KeyCode::ShiftLeft);
@@ -158,7 +157,7 @@ mod tests {
         app.update();
 
         let transform = app.world().get::<Transform>(camera_entite).unwrap();
-        // Vitesse normale = 50.0, avec Shift (* 2.0) = 100.0
+        // Normal speed = 50.0, with Shift (* 2.0) = 100.0
         assert_eq!(transform.translation.x, 100.0);
     }
     // ---End camera Shift movement test---
@@ -168,7 +167,7 @@ mod tests {
     fn test_zoomer_camera_molette_haut_et_bas() {
         let mut app = App::new();
 
-        // Le système a besoin de lire des évènements MouseWheel
+        // The system needs to read MouseWheel events
         app.add_event::<MouseWheel>();
 
         let camera_entite = app
@@ -183,17 +182,17 @@ mod tests {
             unit: MouseScrollUnit::Line,
             x: 0.0,
             y: 1.0,
-            window: Entity::PLACEHOLDER, // Entité factice pour Bevy 0.13+
+            window: Entity::PLACEHOLDER,
         });
 
         app.update();
 
         let transform = app.world().get::<Transform>(camera_entite).unwrap();
-        // Zoom IN = on divise par 1.1. L'échelle par défaut est 1.0. (1.0 / 1.1 = ~0.909)
+        // Zoom IN = divide by 1.1. The default scale is 1.0. (1.0 / 1.1 = ~0.909)
         assert!(transform.scale.x < 1.0);
 
         // --- ZOOM OUT (y < 0.0) ---
-        // On renvoie un évènement pour dézoomer
+        // Emit an event to zoom out
         let mut evenements = app.world_mut().resource_mut::<Events<MouseWheel>>();
         evenements.send(MouseWheel {
             unit: MouseScrollUnit::Line,
@@ -205,7 +204,7 @@ mod tests {
         app.update();
 
         let transform_final = app.world().get::<Transform>(camera_entite).unwrap();
-        // On devrait être revenus à environ 1.0 (0.909 * 1.1)
+        // We should be back to around 1.0 (0.909 * 1.1)
         let difference = (transform_final.scale.x - 1.0).abs();
         assert!(difference < 0.0001, "L'échelle devrait être revenue à 1.0");
     }
@@ -217,7 +216,7 @@ mod tests {
         let mut app = App::new();
         app.add_event::<MouseWheel>();
 
-        // On instancie une caméra déjà à la limite maximale autorisée (50.0)
+        // We instantiate a camera already at the maximum allowed limit (50.0)
         let camera_entite = app
             .world_mut()
             .spawn((Transform::from_scale(Vec3::splat(50.0)), CameraPrincipale))
@@ -225,7 +224,7 @@ mod tests {
 
         app.add_systems(Update, zoomer_camera);
 
-        // On essaye de zoomer OUT (agrandir la caméra, ce qui fait y < 0.0)
+        // We try to zoom out (widen the camera view, resulting in y < 0.0)
         let mut evenements = app.world_mut().resource_mut::<Events<MouseWheel>>();
         evenements.send(MouseWheel {
             unit: MouseScrollUnit::Line,
@@ -238,7 +237,7 @@ mod tests {
 
         let transform = app.world().get::<Transform>(camera_entite).unwrap();
 
-        // Le scale ne doit pas avoir dépassé 50.0 grâce à votre clamp()
+        // The scale must not have exceeded 50.0, thanks to your clamp()
         assert_eq!(transform.scale.x, 50.0);
     }
     // ---End of zoom limit test---
