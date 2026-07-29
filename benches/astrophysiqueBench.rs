@@ -30,6 +30,7 @@ fn bench_generer_caracteristiques(c: &mut Criterion) {
     });
 
     // Realistic simulation
+    
     // Generate 100 features with different probabilities
     // to force the CPU to take different branches (branch prediction)
     c.bench_function("generer_carac_lot_100", |b| {
