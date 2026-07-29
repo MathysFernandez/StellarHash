@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 
-// On importe les éléments nécessaires de ton jeu
+// Import the necessary elements from your game
 use StellarHash::camera::CameraPrincipale;
 use StellarHash::univers::{Etoile, SecteursCharges, garbage_collector_spatial};
 
-/// Fonction utilitaire qui recrée un univers de test
+/// Utility function that recreates a test environment
 fn preparer_monde_surcharge() -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
@@ -38,11 +38,11 @@ fn bench_garbage_collector(c: &mut Criterion) {
         b.iter_batched_ref(
             || preparer_monde_surcharge(),
             |app| {
-                // Étape mesurée : On lance 1 frame.
-                // Le moteur va détecter les 10 000 entités lointaines, les détruire, et filtrer le HashSet.
+                // Measured step: Launch 1 frame.
+                // The engine will detect the 10,000 distant entities, destroy them, and filter the HashSet.
                 app.update();
             },
-            // Indique à Criterion que la préparation prend beaucoup de RAM
+            // Tells Criterion that the preparation requires a lot of RAM.
             BatchSize::LargeInput,
         )
     });

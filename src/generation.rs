@@ -1,30 +1,30 @@
-// Fonction de hachage spatial déterministe
-// Prend les coordonnées (X, Y) et la graine globale, et retourne un "pourcentage" entre 0.0 et 1.0.
+// Deterministic spatial hash function
+// Takes the (X, Y) coordinates and the global seed, and returns a "percentage" between 0.0 and 1.0.
 pub fn calculer_hachage_spatial(x: i32, y: i32, graine: u32) -> f32 {
-    // Les Constantes Magiques: De grands nombres premiers.
+    // Magic Constants: Large prime numbers.
     let prime_x: u32 = 374761393;
     let prime_y: u32 = 668265263;
 
-    // Conversion en bits (pour gérer les coordonnées négatives)
+    // Conversion to bits (to handle negative coordinates)
     let x_bits = x as u32;
     let y_bits = y as u32;
 
-    // Le Mixeur
+    // The Mixer
     let mut hash = graine;
     hash ^= x_bits.wrapping_mul(prime_x);
 
-    // CORRECTION : On décale les bits circulairement pour casser la symétrie
-    // avant d'appliquer le XOR sur Y. Cela détruit l'effet miroir des signes.
+    // CORRECTION: Shift the bits circularly to break the symmetry.
+    // before applying the XOR to Y. This destroys the sign-mirroring effect.
     hash = hash.rotate_left(17);
 
     hash ^= y_bits.wrapping_mul(prime_y);
 
-    // L'Avalanche: On décale les bits et on remélange
+    // The Avalanche: Bits are shifted and re-mixed.
     hash ^= hash >> 13;
     hash = hash.wrapping_mul(1274126177);
     hash ^= hash >> 16;
 
-    // Normalisation: Retourne un flottant entre 0.0 et 1.0
+    // Normalization: Returns a float between 0.0 and 1.0
     (hash as f32) / (std::u32::MAX as f32)
 }
 
@@ -48,11 +48,11 @@ mod tests {
 
             assert!(
                 resultat >= 0.0,
-                "Le hachage doit être supérieur ou égal à 0.0"
+                "The hashing value must be greater than or equal to 0.0."
             );
             assert!(
                 resultat <= 1.0,
-                "Le hachage doit être inférieur ou égal à 1.0"
+                "The hash must be less than or equal to 1.0."
             );
         }
     }
@@ -72,7 +72,7 @@ mod tests {
         // We can safely use assert_eq! here because we expect the exact same bit-for-bit float output
         assert_eq!(
             premier_appel, deuxieme_appel,
-            "Le hachage doit être strictement déterministe pour les mêmes entrées"
+            "Hashing must be strictly deterministic for the same inputs."
         );
     }
     // ---Start of deterministic hashing tests---
@@ -89,7 +89,7 @@ mod tests {
 
         assert_ne!(
             hachage_graine_1, hachage_graine_2,
-            "Deux graines différentes doivent produire des hachages distincts"
+            "Two different seeds must produce distinct hashes."
         );
     }
     // ---End the test of hashing differences with different seeds---
@@ -106,11 +106,11 @@ mod tests {
 
         assert_ne!(
             hachage_positif, hachage_negatif,
-            "Les coordonnées symétriques (10,10) et (-10,-10) ne doivent pas entrer en collision"
+            "The symmetrical coordinates (10, 10) and (-10, -10) must not collide."
         );
         assert_ne!(
             hachage_positif, hachage_mixte,
-            "Chaque quadrant de la grille spatiale doit générer des valeurs uniques"
+            "Each quadrant of the spatial grid must generate unique values."
         );
     }
     // ---End of the test comparing hashing differences with their negative values---

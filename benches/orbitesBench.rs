@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::time::Duration;
 
-// On importe la fonction et le composant depuis ton jeu
+// Import the function and the component from your game
 use StellarHash::univers::{Planete, animer_orbites};
 
 fn preparer_app_orbites(nb_planetes: u32) -> App {
@@ -32,14 +32,14 @@ fn preparer_app_orbites(nb_planetes: u32) -> App {
 }
 
 fn bench_animer_orbites(c: &mut Criterion) {
-    // 1 000 planètes affichées
-    c.bench_function("animer_orbites_1000_planetes", |b| {
+    // 1 000 planets displayed
+    c.bench_function("animate_orbits_1000_planets", |b| {
         let mut app = preparer_app_orbites(1_000);
         b.iter(|| app.update());
     });
 
-    // 100 000 planètes
-    c.bench_function("animer_orbites_100000_planetes", |b| {
+    // 100 000 planets
+    c.bench_function("animate_orbits_100000_planets", |b| {
         let mut app = preparer_app_orbites(100_000);
         b.iter(|| app.update());
     });

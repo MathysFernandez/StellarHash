@@ -5,15 +5,15 @@ use StellarHash::generation::calculer_hachage_spatial;
 fn bench_hachage_spatial(c: &mut Criterion) {
     let graine = 9999;
 
-    // Une seule coordonnée statique (Temps brut de l'algorithme)
+    // A single static coordinate (Raw algorithm time)
     c.bench_function("hachage_spatial_unique", |b| {
         b.iter(|| calculer_hachage_spatial(black_box(42), black_box(-84), black_box(graine)))
     });
 
-    // Une grille de 10x10 (Simulation réaliste avec effet de cache processeur)
+    // A 10x10 grid (Realistic simulation with processor cache effect)
     c.bench_function("hachage_spatial_grille_10x10", |b| {
         b.iter(|| {
-            // On itère sur 100 cases (10 * 10)
+            // Iterate over 100 cells (10 * 10)
             for x in 0..10 {
                 for y in 0..10 {
                     black_box(calculer_hachage_spatial(
@@ -27,6 +27,6 @@ fn bench_hachage_spatial(c: &mut Criterion) {
     });
 }
 
-// Enregistrement et lancement du benchmark
+// Saving and launching the benchmark
 criterion_group!(benches, bench_hachage_spatial);
 criterion_main!(benches);

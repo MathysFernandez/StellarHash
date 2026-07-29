@@ -4,7 +4,7 @@ const PREFIXES_STELLAIRES: [&str; 6] =
     ["Kepler", "Gliese", "Trappist", "Wolf", "Barnard", "Sirius"];
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-// Les classes possibles pour chaque étoile
+// The possible classes for each star
 pub enum ClasseSpectrale {
     O,
     B,
@@ -15,21 +15,21 @@ pub enum ClasseSpectrale {
     M,
 }
 
-// Ce composant sera attaché à chaque étoile générée
+// This component will be attached to each generated star
 #[derive(Component, Debug)]
 pub struct SystemeStellaire {
     pub nom: String,
     pub classe: ClasseSpectrale,
-    // 1.0 = la masse de notre Soleil
+    // 1.0 = the mass of our Sun
     pub masse_solaire: f32,
     pub rayon_solaire: f32,
     pub nb_planetes: u8,
     pub age_milliards_annees: f32,
 }
 
-/// Convertit le hachage brut et les coordonnées en données astrophysiques
+/// Converts the raw hash and coordinates into astrophysical data
 pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStellaire {
-    // Détermination de la Classe Spectrale (Répartition réaliste)
+    // Determination of the Spectral Class (Realistic distribution)
     let classe = if probabilite > 0.998 {
         // Ultra rare
         ClasseSpectrale::O
@@ -44,41 +44,41 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
     } else if probabilite > 0.955 {
         ClasseSpectrale::K
     } else {
-        // Très commun (Naines rouges)
+        // Very common (Red dwarfs)
         ClasseSpectrale::M
     };
 
-    // On multiplie la probabilité et on ne garde que les décimales (ex: 0.9734 * 1000 = 973.4 -> 0.4)
-    // Cela nous donne une nouvelle valeur entre 0.0 et 1.0 pour varier les données
+    // Multiply the probability and keep only the decimal part (e.g., 0.9734 * 1000 = 973.4 -> 0.4)
+    // This gives us a new value between 0.0 and 1.0 to vary the data.
     let variation = (probabilite * 1000.0).fract();
 
-    // Pour la masse et l'âge selon le type d'étoile
+    // For mass and age according to the type of star
     let (masse, age) = match classe {
-        // (Masse min + variation, Âge min + variation)
+        // (Min. mass + variation, min. age + variation)
 
-        // Vies très courtes
+        // Very short lives
         ClasseSpectrale::O => (16.0 + variation * 74.0, 0.001 + variation * 0.01),
         ClasseSpectrale::B => (2.1 + variation * 13.9, 0.01 + variation * 0.1),
         ClasseSpectrale::A => (1.4 + variation * 0.7, 0.1 + variation * 0.9),
         ClasseSpectrale::F => (1.04 + variation * 0.36, 1.0 + variation * 2.0),
 
-        // Comme notre Soleil
+        // Like our Sun
         ClasseSpectrale::G => (0.8 + variation * 0.24, 4.0 + variation * 6.0),
         ClasseSpectrale::K => (0.45 + variation * 0.35, 10.0 + variation * 15.0),
 
-        // Vies quasi éternelles
+        // Quasi-eternal lives
         ClasseSpectrale::M => (0.08 + variation * 0.37, 20.0 + variation * 80.0),
     };
 
-    // Approximation simple pour calculer le rayon en fonction de la masse
+    // Simple approximation for calculating the radius based on mass
     let rayon = masse.powf(0.8);
 
-    // Génération du Nom (Déterministe basé sur les coordonnées X et Y)
+    // Name Generation (Deterministic, based on X and Y coordinates)
     let index_nom = ((x.abs() + y.abs()) as usize) % PREFIXES_STELLAIRES.len();
     let suffixe_numerique = (x.abs() * 73 + y.abs() * 37) % 9999;
     let nom = format!("{}-{}", PREFIXES_STELLAIRES[index_nom], suffixe_numerique);
 
-    // Nombre de planètes (Favorisé autour des étoiles stables G et K)
+    // Number of planets (Favored around stable G- and K-type stars)
     let multiplicateur_planetes = match classe {
         ClasseSpectrale::G | ClasseSpectrale::K => 1.5,
         ClasseSpectrale::O | ClasseSpectrale::B => 0.1,
@@ -86,7 +86,7 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
     };
 
     let nb_planetes = ((variation * 10.0) * multiplicateur_planetes) as u8;
-    // Limite entre 0 et 8 planètes
+    // Limit between 0 and 8 planets
     let nb_planetes = nb_planetes.clamp(0, 8);
 
     SystemeStellaire {

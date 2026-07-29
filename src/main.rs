@@ -6,7 +6,7 @@ use StellarHash::univers;
 
 fn main() {
     App::new()
-        // Les Plugins de base du moteur
+        // The engine's core plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "StellarHash".to_string(),
@@ -15,7 +15,7 @@ fn main() {
             }),
             ..default()
         }))
-        // Plugins personnalisés
+        // Custom plugins
         .add_plugins(camera::CameraPlugin)
         .add_plugins(univers::UniversPlugin)
         .add_plugins(ui::UiPlugin)
@@ -23,7 +23,7 @@ fn main() {
         .run();
 }
 
-// Permet de quitter le jeu avec la touche Echap
+// Allows you to quit the game using the Esc key
 fn quitter_jeu(
     touches: Res<ButtonInput<KeyCode>>,
     mut evenements_sortie: EventWriter<bevy::app::AppExit>,
@@ -38,69 +38,69 @@ mod tests {
     use super::*;
     use bevy::app::AppExit;
 
-    // --- Fonction utilitaire pour préparer l'environnement ---
+    // --- Utility function to prepare the environment ---
     fn preparer_app_quitter() -> App {
         let mut app = App::new();
 
         app.add_plugins(MinimalPlugins);
 
-        // On initialise la ressource qui gère les entrées clavier
+        // Initialize the resource that handles keyboard input
         app.init_resource::<ButtonInput<KeyCode>>();
 
         app
     }
 
-    // --- Aucun événement si la touche n'est pas pressée ---
+    // --- No event if the key is not pressed ---
     #[test]
     fn test_quitter_jeu_ignore_sans_echap() {
         let mut app = preparer_app_quitter();
         app.add_systems(Update, quitter_jeu);
 
-        // On exécute le système sans toucher au clavier
+        // Run the system without touching the keyboard
         app.update();
 
-        // On récupère la file d'événements AppExit
+        // Retrieve the AppExit event queue
         let evenements = app.world().resource::<Events<AppExit>>();
         let lecteur = evenements.get_reader();
 
-        // La file doit être strictement vide
+        // The queue must be strictly empty
         assert!(
             lecteur.is_empty(evenements),
             "Aucun événement de sortie ne devrait être envoyé"
         );
     }
 
-    // --- Envoi de l'événement AppExit::Success si Echap est pressé ---
+    // --- Send AppExit::Success event if Esc is pressed ---
     #[test]
     fn test_quitter_jeu_envoie_event_avec_echap() {
         let mut app = preparer_app_quitter();
         app.add_systems(Update, quitter_jeu);
 
-        // On récupère la ressource clavier pour simuler un appui sur Échap
+        // Get the keyboard resource to simulate an Escape key press
         let mut touches = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         touches.press(KeyCode::Escape);
 
-        // On exécute le système pour qu'il lise l'entrée et génère l'événement
+        // Execute the system so it reads the input and generates the event.
         app.update();
 
-        // On récupère la file d'événements
+        // Retrieve the event queue
         let evenements = app.world().resource::<Events<AppExit>>();
         let mut lecteur = evenements.get_reader();
 
-        // On lit les événements qui ont été envoyés durant cette frame
+        // Read the events sent during this frame
         let mut nombre_evenements = 0;
         for event in lecteur.read(evenements) {
             assert_eq!(
                 *event,
                 AppExit::Success,
-                "L'événement doit être AppExit::Success"
+                "The event must be AppExit::Success."
             );
             nombre_evenements += 1;
         }
 
         assert_eq!(
             nombre_evenements, 1,
-            "Un seul événement de sortie aurait dû être généré"
+            "Only a single exit event should have been generated."
         );
     }
 }
