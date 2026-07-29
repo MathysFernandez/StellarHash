@@ -7,28 +7,28 @@ use StellarHash::camera::CameraPrincipale;
 use StellarHash::ui::{PanneauInfo, TexteInfo, gerer_survol_souris};
 use StellarHash::univers::Etoile;
 
-/// Fonction pour préparer un faux jeu contenant N étoiles
+/// Function to prepare a dummy game containing N stars
 fn preparer_app_survol(nb_etoiles: i32) -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
-    // Fausse Fenêtre
+    // Faux Window
     let mut fenetre = Window::default();
     fenetre.set_cursor_position(Some(Vec2::new(400.0, 300.0)));
     app.world_mut().spawn((fenetre, PrimaryWindow));
 
-    // Fausse Caméra
+    // Dummy Camera
     app.world_mut()
         .spawn((Camera2dBundle::default(), CameraPrincipale));
 
-    // Fausse UI
+    // Mock UI
     app.world_mut().spawn((NodeBundle::default(), PanneauInfo));
     app.world_mut().spawn((
-        TextBundle::from_section("Vide", TextStyle::default()),
+        TextBundle::from_section("Empty", TextStyle::default()),
         TexteInfo,
     ));
 
-    // Génération des étoiles
+    // Star generation
     for i in 0..nb_etoiles {
         let x = (i as f32) * 80.0;
         app.world_mut().spawn((
@@ -56,14 +56,14 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
 }
 
 fn bench_survol_souris(c: &mut Criterion) {
-    // Test avec 1 000 étoiles à l'écran
-    c.bench_function("survol_souris_1000_etoiles", |b| {
+    // Test with 1,000 stars on screen
+    c.bench_function("mouse_hover_1000_stars", |b| {
         let mut app = preparer_app_survol(1000);
         b.iter(|| app.update());
     });
 
-    // Test extreme avec 50 000 étoiles
-    c.bench_function("survol_souris_50000_etoiles", |b| {
+    // Extreme test with 50,000 stars
+    c.bench_function("mouse_hover_50000_stars", |b| {
         let mut app = preparer_app_survol(50000);
         b.iter(|| app.update());
     });
