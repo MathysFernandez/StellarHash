@@ -26,14 +26,7 @@ impl Plugin for UiPlugin {
                     initialize_trivia_panel,
                 ),
             )
-            .add_systems(
-                Update,
-                (
-                    update_fps,
-                    manage_mouse_hover,
-                    update_anecdotes,
-                ),
-            );
+            .add_systems(Update, (update_fps, manage_mouse_hover, update_anecdotes));
     }
 }
 
@@ -206,10 +199,7 @@ pub fn manage_mouse_hover(
 fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
 
-    let lignes: Vec<&str> = ANECDOTE_FILE
-        .lines()
-        .filter(|l| !l.is_empty())
-        .collect();
+    let lignes: Vec<&str> = ANECDOTE_FILE.lines().filter(|l| !l.is_empty()).collect();
     let texte_initial = if !lignes.is_empty() {
         let temps_actuel = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -259,10 +249,7 @@ fn update_anecdotes(
     chrono.0.tick(temps.delta());
 
     if chrono.0.just_finished() {
-        let lignes: Vec<&str> = ANECDOTE_FILE
-            .lines()
-            .filter(|l| !l.is_empty())
-            .collect();
+        let lignes: Vec<&str> = ANECDOTE_FILE.lines().filter(|l| !l.is_empty()).collect();
 
         if lignes.is_empty() {
             return;
