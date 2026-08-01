@@ -6,7 +6,6 @@ use StellarHash::univers;
 
 fn main() {
     App::new()
-        // The engine's core plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "StellarHash".to_string(),
