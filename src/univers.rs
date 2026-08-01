@@ -15,11 +15,11 @@ impl Plugin for UniversPlugin {
             .add_systems(
                 Update,
                 (
-                    generer_univers_dynamique,
-                    garbage_collector_spatial,
-                    gerer_clic_etoile,
-                    animer_orbites,
-                    gerer_lod_planetes,
+                    generate_dynamic_universe,
+                    spatial_garbage_collector,
+                    handle_star_click,
+                    animate_orbits,
+                    handle_planet_lod,
                 ),
             );
     }
@@ -47,7 +47,7 @@ pub struct Planete {
     pub vitesse_orbite: f32,
 }
 
-fn generer_univers_dynamique(
+fn generate_dynamic_universe(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
     graine: Res<GraineGlobale>,
@@ -125,7 +125,7 @@ fn generer_univers_dynamique(
     }
 }
 
-pub fn garbage_collector_spatial(
+pub fn spatial_garbage_collector(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<CameraPrincipale>>,
     requete_etoiles: Query<(Entity, &Etoile)>,
@@ -165,7 +165,7 @@ pub fn garbage_collector_spatial(
     });
 }
 
-fn gerer_lod_planetes(
+fn handle_planet_lod(
     requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
     mut requete_planetes: Query<&mut Visibility, With<Planete>>,
 ) {
@@ -186,7 +186,7 @@ fn gerer_lod_planetes(
     }
 }
 
-fn gerer_clic_etoile(
+fn handle_star_click(
     mut commands: Commands,
     touches_souris: Res<ButtonInput<MouseButton>>,
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
@@ -266,7 +266,7 @@ fn gerer_clic_etoile(
     }
 }
 
-pub fn animer_orbites(
+pub fn animate_orbits(
     temps: Res<Time>,
     mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
 ) {
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_generer_univers_charge_les_premiers_secteurs() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
         // Initially, the HashSet of loaded sectors must be empty
         assert!(app.world().resource::<SecteursCharges>().0.is_empty());
@@ -388,7 +388,7 @@ mod tests {
     #[test]
     fn test_generer_univers_ignore_les_micro_mouvements() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
         // 1st frame: Initialization (position (0,0) is stored in `Local`)
         app.update();
@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn test_generer_univers_reprend_apres_grand_deplacement() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
         // 1st frame (initialization)
         app.update();
@@ -440,7 +440,7 @@ mod tests {
         let secteurs_apres = app.world().resource::<SecteursCharges>().0.len();
         assert!(
             secteurs_apres > secteurs_avant,
-            "La caméra s'est téléportée de 1000 unités, de nouveaux secteurs auraient dû être chargés"
+            "The camera teleported 1,000 units; new sectors should have been loaded."
         );
     }
 
@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn test_garbage_collector_nettoie_hors_limites() {
         let mut app = preparer_app_gc();
-        app.add_systems(Update, garbage_collector_spatial);
+        app.add_systems(Update, spatial_garbage_collector);
 
         // Populate the universe with two stars and two corresponding sectors
         let entite_proche = app
@@ -495,7 +495,7 @@ mod tests {
         assert!(secteurs_apres.0.contains(&(2, 2)));
         assert!(
             !secteurs_apres.0.contains(&(50, 50)),
-            "Le secteur lointain aurait dû être retiré de la mémoire"
+            "The distant sector should have been removed from memory."
         );
     }
 
@@ -503,7 +503,7 @@ mod tests {
     #[test]
     fn test_garbage_collector_ignore_les_micro_mouvements() {
         let mut app = preparer_app_gc();
-        app.add_systems(Update, garbage_collector_spatial);
+        app.add_systems(Update, spatial_garbage_collector);
 
         // Frame 1: The camera is placed very far away to initialize the local variables `derniere_pos_maj`
         let mut requete_camera = app
@@ -543,7 +543,7 @@ mod tests {
     #[test]
     fn test_gerer_lod_cache_les_planetes_si_zoom_superieur_au_seuil() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
         // Create a camera with a zoom (scale.x) greater than the threshold of 3.5
         app.world_mut()
@@ -573,7 +573,7 @@ mod tests {
     #[test]
     fn test_gerer_lod_affiche_les_planetes_si_zoom_inferieur_au_seuil() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
         // Create a camera with a very close zoom (below the 3.5 threshold)
         app.world_mut()
@@ -603,7 +603,7 @@ mod tests {
     #[test]
     fn test_gerer_lod_ne_fait_rien_si_camera_immobile() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
         // Create the camera
         let entite_camera = app
@@ -668,7 +668,7 @@ mod tests {
     #[test]
     fn test_gerer_clic_ignore_si_pas_de_clic() {
         let mut app = preparer_app_clic();
-        app.add_systems(Update, gerer_clic_etoile);
+        app.add_systems(Update, handle_star_click);
 
         // A star appears in the center.
         let entite_etoile = app
@@ -729,7 +729,7 @@ mod tests {
             .id();
 
         // System execution
-        app.add_systems(Update, animer_orbites);
+        app.add_systems(Update, animate_orbits);
         app.update();
 
         // Mathematical checks
