@@ -4,7 +4,7 @@ use bevy::window::PrimaryWindow;
 use std::time::SystemTime;
 
 use crate::astrophysique::StellarSystem;
-use crate::camera::CameraPrincipale;
+use crate::camera::MainCamera;
 use crate::univers::Star;
 
 const FICHIER_ANECDOTES: &str = include_str!("../assets/anecdotes.txt");
@@ -132,7 +132,7 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
 
 pub fn gerer_survol_souris(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
-    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 
     requete_etoiles: Query<(Entity, &Transform, &StellarSystem, &Star)>,
     mut requete_panneau: Query<&mut Style, With<PanneauInfo>>,

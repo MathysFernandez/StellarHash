@@ -6,22 +6,22 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, initialiser_camera)
-            .add_systems(Update, (deplacer_camera, zoomer_camera));
+        app.add_systems(Startup, initialize_camera)
+            .add_systems(Update, (move_camera, zoom_camera));
     }
 }
 
 #[derive(Component)]
-pub struct CameraPrincipale;
+pub struct MainCamera;
 
-fn initialiser_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), CameraPrincipale));
+fn initialize_camera(mut commands: Commands) {
+    commands.spawn((Camera2dBundle::default(), MainCamera));
 }
 
-fn deplacer_camera(
+fn move_camera(
     touches: Res<ButtonInput<KeyCode>>,
     temps: Res<Time>,
-    mut requete_camera: Query<&mut Transform, With<CameraPrincipale>>,
+    mut requete_camera: Query<&mut Transform, With<MainCamera>>,
 ) {
     let mut transform = requete_camera.single_mut();
     let mut vitesse = 500.0 * transform.scale.x;
@@ -50,9 +50,9 @@ fn deplacer_camera(
     }
 }
 
-fn zoomer_camera(
+fn zoom_camera(
     mut evenements_molette: EventReader<MouseWheel>,
-    mut requete_camera: Query<&mut Transform, With<CameraPrincipale>>,
+    mut requete_camera: Query<&mut Transform, With<MainCamera>>,
 ) {
     let mut transform = requete_camera.single_mut();
     for evenement in evenements_molette.read() {
@@ -84,7 +84,7 @@ mod tests {
         let mut app = App::new();
 
         // We add our system
-        app.add_systems(Startup, initialiser_camera);
+        app.add_systems(Startup, initialize_camera);
 
         // Run the application for one frame to execute the Startup
         app.update();
@@ -92,7 +92,7 @@ mod tests {
         // Verify that the camera has been successfully instantiated with its components
         let mut requete = app
             .world_mut()
-            .query_filtered::<&Transform, With<CameraPrincipale>>();
+            .query_filtered::<&Transform, With<MainCamera>>();
 
         // if there isn't exactly one camera, this will panic (which is what we want in a test)
         let _transform = requete.single(app.world());
@@ -101,7 +101,7 @@ mod tests {
 
     // ---Start camera movement test---
     #[test]
-    fn test_deplacer_camera_vers_la_droite() {
+    fn test_move_camera_vers_la_droite() {
         let mut app = App::new();
 
         // Initialize the resources required by the system
@@ -110,10 +110,10 @@ mod tests {
         // We manually instantiate our camera
         let camera_entite = app
             .world_mut()
-            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), CameraPrincipale))
+            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), MainCamera))
             .id();
 
-        app.add_systems(Update, deplacer_camera);
+        app.add_systems(Update, move_camera);
 
         // Simulate pressing the D key (right)
         let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
@@ -135,7 +135,7 @@ mod tests {
 
     // ---Start camera Shift movement test---
     #[test]
-    fn test_deplacer_camera_avec_multiplicateur_shift() {
+    fn test_move_camera_avec_multiplicateur_shift() {
         let mut app = App::new();
         app.init_resource::<ButtonInput<KeyCode>>();
 
@@ -146,9 +146,9 @@ mod tests {
 
         let camera_entite = app
             .world_mut()
-            .spawn((Transform::default(), CameraPrincipale))
+            .spawn((Transform::default(), MainCamera))
             .id();
-        app.add_systems(Update, deplacer_camera);
+        app.add_systems(Update, move_camera);
 
         // Simulate pressing D (right) AND Left Shift
         let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
@@ -165,7 +165,7 @@ mod tests {
 
     // ---Start top and bottom zoom test ---
     #[test]
-    fn test_zoomer_camera_molette_haut_et_bas() {
+    fn test_zoom_camera_molette_haut_et_bas() {
         let mut app = App::new();
 
         // The system needs to read MouseWheel events
@@ -173,9 +173,9 @@ mod tests {
 
         let camera_entite = app
             .world_mut()
-            .spawn((Transform::default(), CameraPrincipale))
+            .spawn((Transform::default(), MainCamera))
             .id();
-        app.add_systems(Update, zoomer_camera);
+        app.add_systems(Update, zoom_camera);
 
         // --- ZOOM IN (y > 0.0) ---
         let mut evenements = app.world_mut().resource_mut::<Events<MouseWheel>>();
@@ -213,17 +213,17 @@ mod tests {
 
     // ---Start of zoom limit test---
     #[test]
-    fn test_zoomer_camera_respecte_les_limites() {
+    fn test_zoom_camera_respecte_les_limites() {
         let mut app = App::new();
         app.add_event::<MouseWheel>();
 
         // We instantiate a camera already at the maximum allowed limit (50.0)
         let camera_entite = app
             .world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(50.0)), CameraPrincipale))
+            .spawn((Transform::from_scale(Vec3::splat(50.0)), MainCamera))
             .id();
 
-        app.add_systems(Update, zoomer_camera);
+        app.add_systems(Update, zoom_camera);
 
         // We try to zoom out (widen the camera view, resulting in y < 0.0)
         let mut evenements = app.world_mut().resource_mut::<Events<MouseWheel>>();

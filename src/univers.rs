@@ -3,7 +3,7 @@ use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::HashSet;
 use bevy::window::PrimaryWindow;
 
-use crate::camera::CameraPrincipale;
+use crate::camera::MainCamera;
 use crate::generation;
 
 pub struct UniversPlugin;
@@ -49,7 +49,7 @@ pub struct Planet {
 
 fn generate_dynamic_universe(
     mut commands: Commands,
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
+    requete_camera: Query<&Transform, With<MainCamera>>,
     graine: Res<GlobalSeed>,
     mut secteurs_charges: ResMut<LoadedSectors>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -127,7 +127,7 @@ fn generate_dynamic_universe(
 
 pub fn spatial_garbage_collector(
     mut commands: Commands,
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
+    requete_camera: Query<&Transform, With<MainCamera>>,
     requete_etoiles: Query<(Entity, &Star)>,
     mut secteurs_charges: ResMut<LoadedSectors>,
     mut derniere_pos_maj: Local<Vec2>,
@@ -166,7 +166,7 @@ pub fn spatial_garbage_collector(
 }
 
 fn handle_planet_lod(
-    requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
+    requete_camera: Query<&Transform, (With<MainCamera>, Changed<Transform>)>,
     mut requete_planetes: Query<&mut Visibility, With<Planet>>,
 ) {
     if let Ok(camera_transform) = requete_camera.get_single() {
@@ -190,7 +190,7 @@ fn handle_star_click(
     mut commands: Commands,
     touches_souris: Res<ButtonInput<MouseButton>>,
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
-    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     requete_etoiles: Query<(
         Entity,
         &Transform,
@@ -303,7 +303,7 @@ mod tests {
 
         // Creating our main camera at the center (0, 0)
         app.world_mut()
-            .spawn((Camera2dBundle::default(), CameraPrincipale));
+            .spawn((Camera2dBundle::default(), MainCamera));
 
         app
     }
@@ -318,7 +318,7 @@ mod tests {
 
         // Creating our camera (defaulting to 0, 0, with a scale/zoom of 1.0)
         app.world_mut()
-            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), CameraPrincipale));
+            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), MainCamera));
 
         app
     }
@@ -343,7 +343,7 @@ mod tests {
         // Simulate the camera centered at (0, 0)
         let mut camera_bundle = Camera2dBundle::default();
         camera_bundle.projection.update(800.0, 600.0);
-        app.world_mut().spawn((camera_bundle, CameraPrincipale));
+        app.world_mut().spawn((camera_bundle, MainCamera));
 
         app
     }
@@ -399,7 +399,7 @@ mod tests {
         // On simule un tout petit mouvement de la caméra (distance < 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 15.0;
 
@@ -428,7 +428,7 @@ mod tests {
         // Teleport the camera very far away (distance > 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 1000.0;
         transform.translation.y += 1000.0;
@@ -476,7 +476,7 @@ mod tests {
         // Otherwise, the Local<Vec2> variable initialized to (0,0) will cause a premature return.
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x = 100.0; // Grid center recalculated to approximately (1, 0)
 
@@ -508,7 +508,7 @@ mod tests {
         // Frame 1: The camera is placed very far away to initialize the local variables `derniere_pos_maj`
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x = 1000.0;
         app.update();
@@ -525,7 +525,7 @@ mod tests {
         // Frame 2: Simulate a movement of 10 units (< 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x += 10.0;
 
@@ -547,7 +547,7 @@ mod tests {
 
         // Create a camera with a zoom (scale.x) greater than the threshold of 3.5
         app.world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(4.0)), CameraPrincipale));
+            .spawn((Transform::from_scale(Vec3::splat(4.0)), MainCamera));
 
         // Create a planet that is currently visible (Inherited)
         let entite_planete = app
@@ -577,7 +577,7 @@ mod tests {
 
         // Create a camera with a very close zoom (below the 3.5 threshold)
         app.world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(1.0)), CameraPrincipale));
+            .spawn((Transform::from_scale(Vec3::splat(1.0)), MainCamera));
 
         // We create a planet that is currently hidden
         let entite_planete = app
@@ -608,7 +608,7 @@ mod tests {
         // Create the camera
         let entite_camera = app
             .world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(2.0)), CameraPrincipale))
+            .spawn((Transform::from_scale(Vec3::splat(2.0)), MainCamera))
             .id();
 
         let entite_planete = app
