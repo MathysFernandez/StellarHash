@@ -2,33 +2,33 @@ use bevy::prelude::*;
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 
 // Import the necessary elements from your game
-use StellarHash::camera::CameraPrincipale;
-use StellarHash::univers::{Etoile, SecteursCharges, garbage_collector_spatial};
+use StellarHash::camera::MainCamera;
+use StellarHash::univers::{LoadedSectors, Star, spatial_garbage_collector};
 
 /// Utility function that recreates a test environment
 fn preparer_monde_surcharge() -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
-    app.init_resource::<SecteursCharges>();
+    app.init_resource::<LoadedSectors>();
 
     app.world_mut()
-        .spawn((Transform::from_xyz(5000.0, 0.0, 0.0), CameraPrincipale));
+        .spawn((Transform::from_xyz(5000.0, 0.0, 0.0), MainCamera));
 
     for x in -50..50 {
         for y in -50..50 {
-            app.world_mut().spawn(Etoile {
+            app.world_mut().spawn(Star {
                 grille_x: x,
                 grille_y: y,
             });
             app.world_mut()
-                .resource_mut::<SecteursCharges>()
+                .resource_mut::<LoadedSectors>()
                 .0
                 .insert((x, y));
         }
     }
 
-    app.add_systems(Update, garbage_collector_spatial);
+    app.add_systems(Update, spatial_garbage_collector);
 
     app
 }

@@ -1,13 +1,13 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
-use StellarHash::generation::calculer_hachage_spatial;
+use StellarHash::generation::calculate_spatial_hash;
 
 fn bench_hachage_spatial(c: &mut Criterion) {
     let graine = 9999;
 
     // A single static coordinate (Raw algorithm time)
     c.bench_function("hachage_spatial_unique", |b| {
-        b.iter(|| calculer_hachage_spatial(black_box(42), black_box(-84), black_box(graine)))
+        b.iter(|| calculate_spatial_hash(black_box(42), black_box(-84), black_box(graine)))
     });
 
     // A 10x10 grid (Realistic simulation with processor cache effect)
@@ -16,7 +16,7 @@ fn bench_hachage_spatial(c: &mut Criterion) {
             // Iterate over 100 cells (10 * 10)
             for x in 0..10 {
                 for y in 0..10 {
-                    black_box(calculer_hachage_spatial(
+                    black_box(calculate_spatial_hash(
                         black_box(x),
                         black_box(y),
                         black_box(graine),

@@ -1,13 +1,13 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::f32::consts::PI;
 
-use StellarHash::astrophysique::generer_caracteristiques;
+use StellarHash::astrophysique::generate_characteristics;
 
-fn bench_generer_caracteristiques(c: &mut Criterion) {
+fn bench_generate_characteristics(c: &mut Criterion) {
     // A single call with a fixed probability (Class M, very common)
     c.bench_function("generer_carac_unique_classe_m", |b| {
         b.iter(|| {
-            generer_caracteristiques(
+            generate_characteristics(
                 black_box(42),
                 black_box(-84),
                 // Probability of 0.5 = Class M
@@ -20,7 +20,7 @@ fn bench_generer_caracteristiques(c: &mut Criterion) {
     // This makes it possible to see if the path taken in the `if/else` affects performance.
     c.bench_function("generer_carac_unique_classe_o", |b| {
         b.iter(|| {
-            generer_caracteristiques(
+            generate_characteristics(
                 black_box(42),
                 black_box(-84),
                 // Probability of 0.999 = Class O
@@ -43,7 +43,7 @@ fn bench_generer_caracteristiques(c: &mut Criterion) {
 
         b.iter(|| {
             for (i, &prob) in probabilites.iter().enumerate() {
-                black_box(generer_caracteristiques(
+                black_box(generate_characteristics(
                     black_box(i as i32),
                     black_box(i as i32 * 2),
                     black_box(prob),
@@ -53,5 +53,5 @@ fn bench_generer_caracteristiques(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_generer_caracteristiques);
+criterion_group!(benches, bench_generate_characteristics);
 criterion_main!(benches);

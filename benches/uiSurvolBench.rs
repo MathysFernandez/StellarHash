@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use StellarHash::astrophysique::{ClasseSpectrale, SystemeStellaire};
-use StellarHash::camera::CameraPrincipale;
-use StellarHash::ui::{PanneauInfo, TexteInfo, gerer_survol_souris};
-use StellarHash::univers::Etoile;
+use StellarHash::astrophysique::{SpectralClass, StellarSystem};
+use StellarHash::camera::MainCamera;
+use StellarHash::ui::{PanneauInfo, TexteInfo, manage_mouse_hover};
+use StellarHash::univers::Star;
 
 /// Function to prepare a dummy game containing N stars
 fn preparer_app_survol(nb_etoiles: i32) -> App {
@@ -19,7 +19,7 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
 
     // Dummy Camera
     app.world_mut()
-        .spawn((Camera2dBundle::default(), CameraPrincipale));
+        .spawn((Camera2dBundle::default(), MainCamera));
 
     // Mock UI
     app.world_mut().spawn((NodeBundle::default(), PanneauInfo));
@@ -33,13 +33,13 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
         let x = (i as f32) * 80.0;
         app.world_mut().spawn((
             Transform::from_xyz(x, 0.0, 0.0),
-            Etoile {
+            Star {
                 grille_x: i,
                 grille_y: 0,
             },
-            SystemeStellaire {
+            StellarSystem {
                 nom: "Test".to_string(),
-                classe: ClasseSpectrale::G,
+                classe: SpectralClass::G,
                 masse_solaire: 1.0,
                 rayon_solaire: 1.0,
                 nb_planetes: 1,
@@ -48,7 +48,7 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
         ));
     }
 
-    app.add_systems(Update, gerer_survol_souris);
+    app.add_systems(Update, manage_mouse_hover);
 
     app.update();
 
