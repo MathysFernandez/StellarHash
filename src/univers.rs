@@ -84,7 +84,7 @@ fn generate_dynamic_universe(
 
             secteurs_charges.0.insert((x, y));
 
-            let probabilite = generation::calculer_hachage_spatial(x, y, graine.0);
+            let probabilite = generation::calculate_spatial_hash(x, y, graine.0);
 
             // Generation threshold increased to 0.95 for performance and clarity
             if probabilite > 0.95 {
