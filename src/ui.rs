@@ -7,7 +7,7 @@ use crate::astrophysique::StellarSystem;
 use crate::camera::MainCamera;
 use crate::univers::Star;
 
-const FICHIER_ANECDOTES: &str = include_str!("../assets/anecdotes.txt");
+const ANECDOTE_FILE: &str = include_str!("../assets/anecdotes.txt");
 
 pub struct UiPlugin;
 
@@ -21,17 +21,17 @@ impl Plugin for UiPlugin {
             .add_systems(
                 Startup,
                 (
-                    initialiser_fps,
-                    initialiser_panneau_info,
-                    initialiser_panneau_anecdotes,
+                    initialize_fps,
+                    initialize_info_panel,
+                    initialize_trivia_panel,
                 ),
             )
             .add_systems(
                 Update,
                 (
-                    mettre_a_jour_fps,
-                    gerer_survol_souris,
-                    mettre_a_jour_anecdotes,
+                    update_fps,
+                    manage_mouse_hover,
+                    update_anecdotes,
                 ),
             );
     }
@@ -52,7 +52,7 @@ struct ChronoAnecdote(Timer);
 #[derive(Component)]
 struct TexteAnecdote;
 
-fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
     // We create an interface box anchored to the top left.
     commands
@@ -81,7 +81,7 @@ fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn mettre_a_jour_fps(
+fn update_fps(
     diagnostics: Res<DiagnosticsStore>,
     mut requete_texte: Query<&mut Text, With<TexteFps>>,
 ) {
@@ -96,7 +96,7 @@ fn mettre_a_jour_fps(
     }
 }
 
-fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_info_panel(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
 
     commands
@@ -130,7 +130,7 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
         });
 }
 
-pub fn gerer_survol_souris(
+pub fn manage_mouse_hover(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
     requete_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 
@@ -203,10 +203,10 @@ pub fn gerer_survol_souris(
     }
 }
 
-fn initialiser_panneau_anecdotes(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
 
-    let lignes: Vec<&str> = FICHIER_ANECDOTES
+    let lignes: Vec<&str> = ANECDOTE_FILE
         .lines()
         .filter(|l| !l.is_empty())
         .collect();
@@ -251,7 +251,7 @@ fn initialiser_panneau_anecdotes(mut commands: Commands, asset_server: Res<Asset
         });
 }
 
-fn mettre_a_jour_anecdotes(
+fn update_anecdotes(
     temps: Res<Time>,
     mut chrono: ResMut<ChronoAnecdote>,
     mut requete_texte: Query<&mut Text, With<TexteAnecdote>>,
@@ -259,7 +259,7 @@ fn mettre_a_jour_anecdotes(
     chrono.0.tick(temps.delta());
 
     if chrono.0.just_finished() {
-        let lignes: Vec<&str> = FICHIER_ANECDOTES
+        let lignes: Vec<&str> = ANECDOTE_FILE
             .lines()
             .filter(|l| !l.is_empty())
             .collect();
@@ -286,7 +286,7 @@ mod tests {
     use bevy::diagnostic::Diagnostic;
 
     #[test]
-    fn test_initialiser_fps_cree_composants() {
+    fn test_initialize_fps_cree_composants() {
         // Create a new empty Bevy App
         let mut app = App::new();
 
@@ -295,7 +295,7 @@ mod tests {
         app.init_asset::<Font>();
 
         // Add our system to the Startup schedule
-        app.add_systems(Startup, initialiser_fps);
+        app.add_systems(Startup, initialize_fps);
 
         // Run the app for one frame to execute the Startup schedule
         app.update();
@@ -311,13 +311,13 @@ mod tests {
     }
 
     #[test]
-    fn test_initialiser_fps_position_correcte() {
+    fn test_initialize_fps_position_correcte() {
         let mut app = App::new();
 
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Font>();
 
-        app.add_systems(Startup, initialiser_fps);
+        app.add_systems(Startup, initialize_fps);
         app.update();
 
         // The TexteFps is a child of the main NodeBundle.
@@ -367,7 +367,7 @@ mod tests {
         app.insert_resource(diagnostics);
 
         // Add and execute our system
-        app.add_systems(Update, mettre_a_jour_fps);
+        app.add_systems(Update, update_fps);
         app.update();
 
         // Check the result
@@ -396,7 +396,7 @@ mod tests {
         diagnostics.add(diagnostic_fps);
         app.insert_resource(diagnostics);
 
-        app.add_systems(Update, mettre_a_jour_fps);
+        app.add_systems(Update, update_fps);
         app.update();
 
         // Retrieve the text after system execution
@@ -415,7 +415,7 @@ mod tests {
         app.init_asset::<Font>();
 
         // Adding and executing the system
-        app.add_systems(Startup, initialiser_panneau_info);
+        app.add_systems(Startup, initialize_info_panel);
         app.update();
 
         // Retrieve the Style component from our information panel
@@ -443,7 +443,7 @@ mod tests {
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Font>();
 
-        app.add_systems(Startup, initialiser_panneau_info);
+        app.add_systems(Startup, initialize_info_panel);
         app.update();
 
         // Look for the entity that has the TexteInfo marker
