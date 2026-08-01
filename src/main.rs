@@ -6,7 +6,6 @@ use StellarHash::univers;
 
 fn main() {
     App::new()
-        // The engine's core plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "StellarHash".to_string(),
@@ -19,12 +18,12 @@ fn main() {
         .add_plugins(camera::CameraPlugin)
         .add_plugins(univers::UniversPlugin)
         .add_plugins(ui::UiPlugin)
-        .add_systems(Update, quitter_jeu)
+        .add_systems(Update, quit_game)
         .run();
 }
 
 // Allows you to quit the game using the Esc key
-fn quitter_jeu(
+fn quit_game(
     touches: Res<ButtonInput<KeyCode>>,
     mut evenements_sortie: EventWriter<bevy::app::AppExit>,
 ) {
@@ -54,7 +53,7 @@ mod tests {
     #[test]
     fn test_quitter_jeu_ignore_sans_echap() {
         let mut app = preparer_app_quitter();
-        app.add_systems(Update, quitter_jeu);
+        app.add_systems(Update, quit_game);
 
         // Run the system without touching the keyboard
         app.update();
@@ -74,7 +73,7 @@ mod tests {
     #[test]
     fn test_quitter_jeu_envoie_event_avec_echap() {
         let mut app = preparer_app_quitter();
-        app.add_systems(Update, quitter_jeu);
+        app.add_systems(Update, quit_game);
 
         // Get the keyboard resource to simulate an Escape key press
         let mut touches = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();

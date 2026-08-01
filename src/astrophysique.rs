@@ -5,7 +5,7 @@ const PREFIXES_STELLAIRES: [&str; 6] =
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 // The possible classes for each star
-pub enum ClasseSpectrale {
+pub enum SpectralClass {
     O,
     B,
     A,
@@ -17,9 +17,9 @@ pub enum ClasseSpectrale {
 
 // This component will be attached to each generated star
 #[derive(Component, Debug)]
-pub struct SystemeStellaire {
+pub struct StellarSystem {
     pub nom: String,
-    pub classe: ClasseSpectrale,
+    pub classe: SpectralClass,
     // 1.0 = the mass of our Sun
     pub masse_solaire: f32,
     pub rayon_solaire: f32,
@@ -28,24 +28,24 @@ pub struct SystemeStellaire {
 }
 
 /// Converts the raw hash and coordinates into astrophysical data
-pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStellaire {
+pub fn generate_characteristics(x: i32, y: i32, probabilite: f32) -> StellarSystem {
     // Determination of the Spectral Class (Realistic distribution)
     let classe = if probabilite > 0.998 {
         // Ultra rare
-        ClasseSpectrale::O
+        SpectralClass::O
     } else if probabilite > 0.99 {
-        ClasseSpectrale::B
+        SpectralClass::B
     } else if probabilite > 0.98 {
-        ClasseSpectrale::A
+        SpectralClass::A
     } else if probabilite > 0.97 {
-        ClasseSpectrale::F
+        SpectralClass::F
     } else if probabilite > 0.96 {
-        ClasseSpectrale::G
+        SpectralClass::G
     } else if probabilite > 0.955 {
-        ClasseSpectrale::K
+        SpectralClass::K
     } else {
         // Very common (Red dwarfs)
-        ClasseSpectrale::M
+        SpectralClass::M
     };
 
     // Multiply the probability and keep only the decimal part (e.g., 0.9734 * 1000 = 973.4 -> 0.4)
@@ -57,17 +57,17 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
         // (Min. mass + variation, min. age + variation)
 
         // Very short lives
-        ClasseSpectrale::O => (16.0 + variation * 74.0, 0.001 + variation * 0.01),
-        ClasseSpectrale::B => (2.1 + variation * 13.9, 0.01 + variation * 0.1),
-        ClasseSpectrale::A => (1.4 + variation * 0.7, 0.1 + variation * 0.9),
-        ClasseSpectrale::F => (1.04 + variation * 0.36, 1.0 + variation * 2.0),
+        SpectralClass::O => (16.0 + variation * 74.0, 0.001 + variation * 0.01),
+        SpectralClass::B => (2.1 + variation * 13.9, 0.01 + variation * 0.1),
+        SpectralClass::A => (1.4 + variation * 0.7, 0.1 + variation * 0.9),
+        SpectralClass::F => (1.04 + variation * 0.36, 1.0 + variation * 2.0),
 
         // Like our Sun
-        ClasseSpectrale::G => (0.8 + variation * 0.24, 4.0 + variation * 6.0),
-        ClasseSpectrale::K => (0.45 + variation * 0.35, 10.0 + variation * 15.0),
+        SpectralClass::G => (0.8 + variation * 0.24, 4.0 + variation * 6.0),
+        SpectralClass::K => (0.45 + variation * 0.35, 10.0 + variation * 15.0),
 
         // Quasi-eternal lives
-        ClasseSpectrale::M => (0.08 + variation * 0.37, 20.0 + variation * 80.0),
+        SpectralClass::M => (0.08 + variation * 0.37, 20.0 + variation * 80.0),
     };
 
     // Simple approximation for calculating the radius based on mass
@@ -80,8 +80,8 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
 
     // Number of planets (Favored around stable G- and K-type stars)
     let multiplicateur_planetes = match classe {
-        ClasseSpectrale::G | ClasseSpectrale::K => 1.5,
-        ClasseSpectrale::O | ClasseSpectrale::B => 0.1,
+        SpectralClass::G | SpectralClass::K => 1.5,
+        SpectralClass::O | SpectralClass::B => 0.1,
         _ => 1.0,
     };
 
@@ -89,7 +89,7 @@ pub fn generer_caracteristiques(x: i32, y: i32, probabilite: f32) -> SystemeStel
     // Limit between 0 and 8 planets
     let nb_planetes = nb_planetes.clamp(0, 8);
 
-    SystemeStellaire {
+    StellarSystem {
         nom,
         classe,
         masse_solaire: masse,
@@ -109,50 +109,50 @@ mod tests {
     #[test]
     fn test_classe_spectrale_ultra_rare_o() {
         // Classe O
-        let systeme = generer_caracteristiques(0, 0, 0.999);
-        assert_eq!(systeme.classe, ClasseSpectrale::O);
+        let systeme = generate_characteristics(0, 0, 0.999);
+        assert_eq!(systeme.classe, SpectralClass::O);
     }
 
     #[test]
     fn test_classe_spectrale_commune_b() {
         // Classe B
-        let systeme = generer_caracteristiques(0, 0, 0.997);
-        assert_eq!(systeme.classe, ClasseSpectrale::B);
+        let systeme = generate_characteristics(0, 0, 0.997);
+        assert_eq!(systeme.classe, SpectralClass::B);
     }
 
     #[test]
     fn test_classe_spectrale_commune_a() {
         // Classe A
-        let systeme = generer_caracteristiques(0, 0, 0.987);
-        assert_eq!(systeme.classe, ClasseSpectrale::A);
+        let systeme = generate_characteristics(0, 0, 0.987);
+        assert_eq!(systeme.classe, SpectralClass::A);
     }
 
     #[test]
     fn test_classe_spectrale_commune_f() {
         // Classe F
-        let systeme = generer_caracteristiques(0, 0, 0.977);
-        assert_eq!(systeme.classe, ClasseSpectrale::F);
+        let systeme = generate_characteristics(0, 0, 0.977);
+        assert_eq!(systeme.classe, SpectralClass::F);
     }
 
     #[test]
     fn test_classe_spectrale_commune_g() {
         // Classe G
-        let systeme = generer_caracteristiques(0, 0, 0.967);
-        assert_eq!(systeme.classe, ClasseSpectrale::G);
+        let systeme = generate_characteristics(0, 0, 0.967);
+        assert_eq!(systeme.classe, SpectralClass::G);
     }
 
     #[test]
     fn test_classe_spectrale_commune_k() {
         // Classe K
-        let systeme = generer_caracteristiques(0, 0, 0.957);
-        assert_eq!(systeme.classe, ClasseSpectrale::K);
+        let systeme = generate_characteristics(0, 0, 0.957);
+        assert_eq!(systeme.classe, SpectralClass::K);
     }
 
     #[test]
     fn test_classe_spectrale_commune_m() {
         // Classe M
-        let systeme = generer_caracteristiques(0, 0, 0.5);
-        assert_eq!(systeme.classe, ClasseSpectrale::M);
+        let systeme = generate_characteristics(0, 0, 0.5);
+        assert_eq!(systeme.classe, SpectralClass::M);
     }
     // ---End of threshold verification---
 
@@ -163,9 +163,9 @@ mod tests {
     fn test_imprecision_flottants_et_bornes() {
         // On génère une étoile de type G (probabilité > 0.96)
         let probabilite = 0.965;
-        let systeme = generer_caracteristiques(0, 0, probabilite);
+        let systeme = generate_characteristics(0, 0, probabilite);
 
-        assert_eq!(systeme.classe, ClasseSpectrale::G);
+        assert_eq!(systeme.classe, SpectralClass::G);
 
         // Classe G : masse entre 0.8 et (0.8 + 0.24 = 1.04)
         assert!(systeme.masse_solaire >= 0.8);
@@ -186,8 +186,8 @@ mod tests {
     // Ensure that negative coordinates do not cause the name generation to fail.
     #[test]
     fn test_coordonnees_negatives_generent_noms_valides() {
-        let systeme_positif = generer_caracteristiques(15, 30, 0.96);
-        let systeme_negatif = generer_caracteristiques(-15, -30, 0.96);
+        let systeme_positif = generate_characteristics(15, 30, 0.96);
+        let systeme_negatif = generate_characteristics(-15, -30, 0.96);
 
         // Thanks to x.abs() and y.abs(), negative coordinates should yield the same name
         // as their absolute positive equivalents.

@@ -1,6 +1,6 @@
 // Deterministic spatial hash function
 // Takes the (X, Y) coordinates and the global seed, and returns a "percentage" between 0.0 and 1.0.
-pub fn calculer_hachage_spatial(x: i32, y: i32, graine: u32) -> f32 {
+pub fn calculate_spatial_hash(x: i32, y: i32, graine: u32) -> f32 {
     // Magic Constants: Large prime numbers.
     let prime_x: u32 = 374761393;
     let prime_y: u32 = 668265263;
@@ -44,7 +44,7 @@ mod tests {
         ];
 
         for (x, y, graine) in points_a_tester {
-            let resultat = calculer_hachage_spatial(x, y, graine);
+            let resultat = calculate_spatial_hash(x, y, graine);
 
             assert!(
                 resultat >= 0.0,
@@ -66,8 +66,8 @@ mod tests {
         let y = -84;
         let graine = 9999;
 
-        let premier_appel = calculer_hachage_spatial(x, y, graine);
-        let deuxieme_appel = calculer_hachage_spatial(x, y, graine);
+        let premier_appel = calculate_spatial_hash(x, y, graine);
+        let deuxieme_appel = calculate_spatial_hash(x, y, graine);
 
         // We can safely use assert_eq! here because we expect the exact same bit-for-bit float output
         assert_eq!(
@@ -84,8 +84,8 @@ mod tests {
         let x = 100;
         let y = 100;
 
-        let hachage_graine_1 = calculer_hachage_spatial(x, y, 1000);
-        let hachage_graine_2 = calculer_hachage_spatial(x, y, 1001);
+        let hachage_graine_1 = calculate_spatial_hash(x, y, 1000);
+        let hachage_graine_2 = calculate_spatial_hash(x, y, 1001);
 
         assert_ne!(
             hachage_graine_1, hachage_graine_2,
@@ -100,9 +100,9 @@ mod tests {
         // Validate that negative coordinates don't crash and that symmetric coordinates do not produce collisions
         let graine = 12345;
 
-        let hachage_positif = calculer_hachage_spatial(10, 10, graine);
-        let hachage_negatif = calculer_hachage_spatial(-10, -10, graine);
-        let hachage_mixte = calculer_hachage_spatial(-10, 10, graine);
+        let hachage_positif = calculate_spatial_hash(10, 10, graine);
+        let hachage_negatif = calculate_spatial_hash(-10, -10, graine);
+        let hachage_mixte = calculate_spatial_hash(-10, 10, graine);
 
         assert_ne!(
             hachage_positif, hachage_negatif,
