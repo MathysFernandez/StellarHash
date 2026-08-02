@@ -5,7 +5,7 @@ use StellarHash::astrophysique::generate_characteristics;
 
 fn bench_generate_characteristics(c: &mut Criterion) {
     // A single call with a fixed probability (Class M, very common)
-    c.bench_function("generer_carac_unique_classe_m", |b| {
+    c.bench_function("generate_unique_characteristic_class_m", |b| {
         b.iter(|| {
             generate_characteristics(
                 black_box(42),
@@ -18,7 +18,7 @@ fn bench_generate_characteristics(c: &mut Criterion) {
 
     // A single call with a fixed probability (Class O, ultra-rare)
     // This makes it possible to see if the path taken in the `if/else` affects performance.
-    c.bench_function("generer_carac_unique_classe_o", |b| {
+    c.bench_function("generate_unique_characteristic_class_o", |b| {
         b.iter(|| {
             generate_characteristics(
                 black_box(42),
@@ -32,7 +32,7 @@ fn bench_generate_characteristics(c: &mut Criterion) {
     // Realistic simulation
     // Generate 100 features with different probabilities
     // to force the CPU to take different branches (branch prediction)
-    c.bench_function("generer_carac_lot_100", |b| {
+    c.bench_function("generate_batch_100_characteristics", |b| {
         // Prepare an array of 100 probabilities
         let probabilites: Vec<f32> = (0..100)
             .map(|i| {
