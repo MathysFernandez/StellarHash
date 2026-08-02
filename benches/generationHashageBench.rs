@@ -28,5 +28,5 @@ fn bench_spatial_hash(c: &mut Criterion) {
 }
 
 // Saving and launching the benchmark
-criterion_group!(benches, bench_hachage_spatial);
+criterion_group!(benches, bench_spatial_hash);
 criterion_main!(benches);
