@@ -5,7 +5,7 @@ use std::time::Duration;
 // Import the function and the component from your game
 use StellarHash::univers::{Planet, animate_orbits};
 
-fn preparer_app_orbites(nb_planetes: u32) -> App {
+fn prepare_orbits_app(nb_planetes: u32) -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
@@ -34,13 +34,13 @@ fn preparer_app_orbites(nb_planetes: u32) -> App {
 fn bench_animate_orbits(c: &mut Criterion) {
     // 1 000 planets displayed
     c.bench_function("animate_orbits_1000_planets", |b| {
-        let mut app = preparer_app_orbites(1_000);
+        let mut app = prepare_orbits_app(1_000);
         b.iter(|| app.update());
     });
 
     // 100 000 planets
     c.bench_function("animate_orbits_100000_planets", |b| {
-        let mut app = preparer_app_orbites(100_000);
+        let mut app = prepare_orbits_app(100_000);
         b.iter(|| app.update());
     });
 }
