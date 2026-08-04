@@ -65,6 +65,15 @@ To run the benchmark suite locally on your machine:
 ```bash
 cargo bench
 ```
+---
+
+## 🤝 Contributing
+We welcome contributions! To keep the project organized, please follow these steps:
+
+1. Open an issue **using the provided Issue Templates** (Bug Report or Feature Request) to discuss your idea.
+2. Create a dedicated branch (`git switch -c feature/your-feature`).
+3. Commit your changes.
+4. Open a Pull Request against the `dev` branch.
 
 ---
 ## Project Architecture
