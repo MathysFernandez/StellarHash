@@ -2,44 +2,44 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use StellarHash::astrophysique::{ClasseSpectrale, SystemeStellaire};
-use StellarHash::camera::CameraPrincipale;
-use StellarHash::ui::{PanneauInfo, TexteInfo, gerer_survol_souris};
-use StellarHash::univers::Etoile;
+use StellarHash::astrophysique::{SpectralClass, StellarSystem};
+use StellarHash::camera::MainCamera;
+use StellarHash::ui::{PanneauInfo, TexteInfo, manage_mouse_hover};
+use StellarHash::univers::Star;
 
-/// Fonction pour préparer un faux jeu contenant N étoiles
-fn preparer_app_survol(nb_etoiles: i32) -> App {
+/// Function to prepare a dummy game containing N stars
+fn prepare_overview_app(nb_etoiles: i32) -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
-    // Fausse Fenêtre
+    // Faux Window
     let mut fenetre = Window::default();
     fenetre.set_cursor_position(Some(Vec2::new(400.0, 300.0)));
     app.world_mut().spawn((fenetre, PrimaryWindow));
 
-    // Fausse Caméra
+    // Dummy Camera
     app.world_mut()
-        .spawn((Camera2dBundle::default(), CameraPrincipale));
+        .spawn((Camera2dBundle::default(), MainCamera));
 
-    // Fausse UI
+    // Mock UI
     app.world_mut().spawn((NodeBundle::default(), PanneauInfo));
     app.world_mut().spawn((
-        TextBundle::from_section("Vide", TextStyle::default()),
+        TextBundle::from_section("Empty", TextStyle::default()),
         TexteInfo,
     ));
 
-    // Génération des étoiles
+    // Star generation
     for i in 0..nb_etoiles {
         let x = (i as f32) * 80.0;
         app.world_mut().spawn((
             Transform::from_xyz(x, 0.0, 0.0),
-            Etoile {
+            Star {
                 grille_x: i,
                 grille_y: 0,
             },
-            SystemeStellaire {
+            StellarSystem {
                 nom: "Test".to_string(),
-                classe: ClasseSpectrale::G,
+                classe: SpectralClass::G,
                 masse_solaire: 1.0,
                 rayon_solaire: 1.0,
                 nb_planetes: 1,
@@ -48,26 +48,26 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
         ));
     }
 
-    app.add_systems(Update, gerer_survol_souris);
+    app.add_systems(Update, manage_mouse_hover);
 
     app.update();
 
     app
 }
 
-fn bench_survol_souris(c: &mut Criterion) {
-    // Test avec 1 000 étoiles à l'écran
-    c.bench_function("survol_souris_1000_etoiles", |b| {
-        let mut app = preparer_app_survol(1000);
+fn bench_mouse_hover(c: &mut Criterion) {
+    // Test with 1,000 stars on screen
+    c.bench_function("mouse_hover_1000_stars", |b| {
+        let mut app = prepare_overview_app(1000);
         b.iter(|| app.update());
     });
 
-    // Test extreme avec 50 000 étoiles
-    c.bench_function("survol_souris_50000_etoiles", |b| {
-        let mut app = preparer_app_survol(50000);
+    // Extreme test with 50,000 stars
+    c.bench_function("mouse_hover_50000_stars", |b| {
+        let mut app = prepare_overview_app(50000);
         b.iter(|| app.update());
     });
 }
 
-criterion_group!(benches, bench_survol_souris);
+criterion_group!(benches, bench_mouse_hover);
 criterion_main!(benches);

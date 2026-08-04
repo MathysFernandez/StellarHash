@@ -1,22 +1,22 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
-use StellarHash::generation::calculer_hachage_spatial;
+use StellarHash::generation::calculate_spatial_hash;
 
-fn bench_hachage_spatial(c: &mut Criterion) {
+fn bench_spatial_hash(c: &mut Criterion) {
     let graine = 9999;
 
-    // Une seule coordonnée statique (Temps brut de l'algorithme)
-    c.bench_function("hachage_spatial_unique", |b| {
-        b.iter(|| calculer_hachage_spatial(black_box(42), black_box(-84), black_box(graine)))
+    // A single static coordinate (Raw algorithm time)
+    c.bench_function("unique_spatial_hashing", |b| {
+        b.iter(|| calculate_spatial_hash(black_box(42), black_box(-84), black_box(graine)))
     });
 
-    // Une grille de 10x10 (Simulation réaliste avec effet de cache processeur)
-    c.bench_function("hachage_spatial_grille_10x10", |b| {
+    // A 10x10 grid (Realistic simulation with processor cache effect)
+    c.bench_function("10x10_grid_spatial_hashing", |b| {
         b.iter(|| {
-            // On itère sur 100 cases (10 * 10)
+            // Iterate over 100 cells (10 * 10)
             for x in 0..10 {
                 for y in 0..10 {
-                    black_box(calculer_hachage_spatial(
+                    black_box(calculate_spatial_hash(
                         black_box(x),
                         black_box(y),
                         black_box(graine),
@@ -27,6 +27,6 @@ fn bench_hachage_spatial(c: &mut Criterion) {
     });
 }
 
-// Enregistrement et lancement du benchmark
-criterion_group!(benches, bench_hachage_spatial);
+// Saving and launching the benchmark
+criterion_group!(benches, bench_spatial_hash);
 criterion_main!(benches);

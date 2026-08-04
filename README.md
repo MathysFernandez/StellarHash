@@ -1,5 +1,9 @@
 # StellarHash 🚀
+![Release](https://github.com/MathysFernandez/StellarHash/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/MathysFernandez/StellarHash/actions/workflows/release.yml/badge.svg)
+![Release](https://github.com/MathysFernandez/StellarHash/actions/workflows/rename_issues.yml/badge.svg)
 
+rename_issues
 > A deterministic, procedurally generated 2D universe explorer built from scratch using Rust and the [Bevy Engine](https://bevyengine.org/).
 
 <img width="1586" height="538" alt="Image" src="https://github.com/user-attachments/assets/7851e4fb-531f-4c9c-b73b-aa53558634af" />
@@ -40,7 +44,7 @@ The engine is highly optimized, featuring dynamic memory management, spatial gri
 Clone the repository and run the project in **release mode** for optimal performance:
 
 ```bash
-git clone [https://github.com/MathysFernandez/StellarHash.git](https://github.com/MathysFernandez/StellarHash.git)
+git clone https://github.com/ProceduralDynamics/StellarHash.git
 ```
 
 ```bash
@@ -50,6 +54,26 @@ cd StellarHash
 ```bash
 cargo run --release
 ```
+
+---
+
+---
+## Benchmarks
+Given the procedural and deterministic nature of the universe, performance is a core focus of StellarHash. We maintain a suite of benchmarks to ensure the spatial hashing and generation algorithms remain lightning-fast and capable of sustaining 60+ FPS.
+
+To run the benchmark suite locally on your machine:
+```bash
+cargo bench
+```
+---
+
+## 🤝 Contributing
+We welcome contributions! To keep the project organized, please follow these steps:
+
+1. Open an issue **using the provided Issue Templates** (Bug Report or Feature Request) to discuss your idea.
+2. Create a dedicated branch (`git switch -c feature/your-feature`).
+3. Commit your changes.
+4. Open a Pull Request against the `dev` branch.
 
 ---
 ## Project Architecture

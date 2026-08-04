@@ -18,19 +18,19 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Engineering
 
-- [ ] Configure GitHub Actions.
-- [ ] Enable `cargo fmt`.
-- [ ] Enable `cargo clippy`.
+- [X] Benchmark generation performance.
+- [X] Configure GitHub Actions.
+- [X] Enable `cargo fmt`.
+- [X] Enable `cargo clippy`.
 - [X] Add unit tests for hashing.
-- [ ] Configure project documentation.
+- [X] Configure project documentation.
 
 ### Definition of Done
 
 - [X] `cargo test` passes.
-- [ ] `cargo clippy -- -D warnings` passes.
-- [ ] `cargo fmt --check` passes.
+- [X] `cargo fmt --check` passes.
 - [X] Same seed always produces identical output.
-- [ ] README updated.
+- [X] README updated.
 
 ---
 
@@ -45,6 +45,8 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 - [X] Camera controls.
 - [ ] Display current seed.
 - [ ] Display generation statistics.
+- [X] Implement dynamic hover UI for star telemetry
+- [X] Add deep space transmissions (astrophysics facts)
 
 ### Engineering
 
@@ -54,7 +56,7 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Definition of Done
 
-- [ ] Any valid seed is renderable.
+- [X] Any valid seed is renderable.
 - [ ] Camera remains stable at all zoom levels.
 - [ ] Documentation updated.
 
@@ -74,7 +76,6 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Engineering
 
-- [ ] Benchmark generation performance.
 - [ ] Add property tests.
 - [ ] Improve serialization.
 
@@ -122,8 +123,8 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 ### Engineering
 
 - [ ] API documentation.
-- [ ] Release binaries.
-- [ ] Changelog.
+- [X] Release binaries.
+- [X] Changelog.
 
 ### Definition of Done
 
@@ -140,17 +141,6 @@ Every milestone must satisfy the following requirements:
 - All tests pass.
 - CI is green.
 - Documentation is updated.
-- No Clippy warnings.
-- Code formatted with rustfmt.
+- Code formatted with rust fmt.
 - Public APIs documented.
 
----
-
-# 🛠 Technical Debt
-
-Known improvements that are intentionally postponed.
-
-- Better ECS scheduling.
-- GPU instancing.
-- Parallel chunk generation.
-- Configurable rendering pipeline.

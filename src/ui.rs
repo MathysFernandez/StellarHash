@@ -3,11 +3,11 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use std::time::SystemTime;
 
-use crate::astrophysique::SystemeStellaire;
-use crate::camera::CameraPrincipale;
-use crate::univers::Etoile;
+use crate::astrophysique::StellarSystem;
+use crate::camera::MainCamera;
+use crate::univers::Star;
 
-const FICHIER_ANECDOTES: &str = include_str!("../assets/anecdotes.txt");
+const ANECDOTE_FILE: &str = include_str!("../assets/anecdotes.txt");
 
 pub struct UiPlugin;
 
@@ -21,19 +21,12 @@ impl Plugin for UiPlugin {
             .add_systems(
                 Startup,
                 (
-                    initialiser_fps,
-                    initialiser_panneau_info,
-                    initialiser_panneau_anecdotes,
+                    initialize_fps,
+                    initialize_info_panel,
+                    initialize_trivia_panel,
                 ),
             )
-            .add_systems(
-                Update,
-                (
-                    mettre_a_jour_fps,
-                    gerer_survol_souris,
-                    mettre_a_jour_anecdotes,
-                ),
-            );
+            .add_systems(Update, (update_fps, manage_mouse_hover, update_anecdotes));
     }
 }
 
@@ -52,9 +45,9 @@ struct ChronoAnecdote(Timer);
 #[derive(Component)]
 struct TexteAnecdote;
 
-fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
-    // On crée une une boîte d'interface collée en haut à gauche
+    // We create an interface box anchored to the top left.
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -66,10 +59,10 @@ fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         })
         .with_children(|parent| {
-            // À l'intérieur de cette boîte, on ajoute notre texte
+            // We add our text inside this box
             parent.spawn((
                 TextBundle::from_section(
-                    "FPS: calcul...",
+                    "FPS: calculation...",
                     TextStyle {
                         font: police,
                         font_size: 24.0,
@@ -81,14 +74,14 @@ fn initialiser_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn mettre_a_jour_fps(
+fn update_fps(
     diagnostics: Res<DiagnosticsStore>,
     mut requete_texte: Query<&mut Text, With<TexteFps>>,
 ) {
     for mut texte in &mut requete_texte {
-        // On récupère la donnée FPS depuis le moteur
+        // Retrieve the FPS data from the engine
         if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
-            // smoothed() donne une moyenne lissée
+            // smoothed() returns a smoothed average
             if let Some(valeur) = fps.smoothed() {
                 texte.sections[0].value = format!("FPS: {:.1}", valeur);
             }
@@ -96,7 +89,7 @@ fn mettre_a_jour_fps(
     }
 }
 
-fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_info_panel(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
 
     commands
@@ -104,21 +97,21 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    display: Display::None, // Caché par défaut
+                    display: Display::None,
                     flex_direction: FlexDirection::Column,
                     padding: UiRect::all(Val::Px(10.0)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)), // Fond noir semi-transparent
+                background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)),
                 ..default()
             },
             PanneauInfo,
         ))
         .with_children(|parent| {
-            // Le texte à l'intérieur
+            // The text inside
             parent.spawn((
                 TextBundle::from_section(
-                    "Données Stellaire",
+                    "Stellar Data",
                     TextStyle {
                         font: police,
                         font_size: 18.0,
@@ -130,39 +123,42 @@ fn initialiser_panneau_info(mut commands: Commands, asset_server: Res<AssetServe
         });
 }
 
-pub fn gerer_survol_souris(
+pub fn manage_mouse_hover(
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
-    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
-    requete_etoiles: Query<(&Transform, &SystemeStellaire, &Etoile)>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+
+    requete_etoiles: Query<(Entity, &Transform, &StellarSystem, &Star)>,
     mut requete_panneau: Query<&mut Style, With<PanneauInfo>>,
     mut requete_texte: Query<&mut Text, With<TexteInfo>>,
+
+    mut derniere_etoile_survolee: Local<Option<Entity>>,
 ) {
     let fenetre = requete_fenetre.single();
     let (camera, camera_transform) = requete_camera.single();
 
-    // On vérifie si la souris est bien dans la fenêtre
+    // We check whether the mouse is actually inside the window.
     if let Some(position_curseur_ecran) = fenetre.cursor_position() {
-        // On convertit les pixels de l'écran en coordonnées du Monde 2D (Raycasting mathématique)
+        // Screen pixels are converted into 2D world coordinates (mathematical raycasting).
         if let Some(position_monde) =
             camera.viewport_to_world_2d(camera_transform, position_curseur_ecran)
         {
             let mut etoile_survolee = None;
 
-            // On calcule la case sur laquelle se trouve la souris
+            // We calculate the square where the mouse is located.
             let taille_secteur = 80.0;
             let souris_grille_x = (position_monde.x / taille_secteur).round() as i32;
             let souris_grille_y = (position_monde.y / taille_secteur).round() as i32;
 
-            // On teste toutes les étoiles actuellement affichées pour voir si la souris est dessus
-            for (transform_etoile, systeme, etoile) in requete_etoiles.iter() {
-                // On ignore instantanément toutes les étoiles qui ne sont pas dans la case de la souris ou dans les cases voisines.
+            // We are testing all the currently displayed stars to see if the mouse is over them.
+            for (entite, transform_etoile, systeme, etoile) in requete_etoiles.iter() {
+                // Any stars not located within the mouse's grid cell or the adjacent cells are immediately disregarded.
                 if (etoile.grille_x - souris_grille_x).abs() <= 1
                     && (etoile.grille_y - souris_grille_y).abs() <= 1
                 {
                     let distance = position_monde.distance(transform_etoile.translation.truncate());
 
                     if distance < 25.0 {
-                        etoile_survolee = Some(systeme);
+                        etoile_survolee = Some((entite, systeme));
                         break;
                     }
                 }
@@ -171,49 +167,50 @@ pub fn gerer_survol_souris(
             let mut style_panneau = requete_panneau.single_mut();
             let mut texte = requete_texte.single_mut();
 
-            // Si on survole une étoile, on met à jour le texte et on affiche le panneau sous la souris
-            if let Some(systeme) = etoile_survolee {
+            // Hovering over a star updates the text and displays the panel beneath the mouse.
+            if let Some((entite_actuelle, systeme)) = etoile_survolee {
                 style_panneau.display = Display::Flex;
 
-                // On décalle un peu le panneau pour qu'il ne soit pas caché par le curseur de la souris
+                // Shift the panel slightly so it isn't hidden by the mouse cursor.
                 style_panneau.left = Val::Px(position_curseur_ecran.x + 15.0);
                 style_panneau.top = Val::Px(position_curseur_ecran.y + 15.0);
 
-                texte.sections[0].value = format!(
-                    "Systeme : {}\nClasse : {:?}\nMasse Solaire : {:.2} MS\nPlanetes : {}\nAge : {:.1} Ga",
-                    systeme.nom,
-                    systeme.classe,
-                    systeme.masse_solaire,
-                    systeme.nb_planetes,
-                    systeme.age_milliards_annees
-                );
+                if *derniere_etoile_survolee != Some(entite_actuelle) {
+                    texte.sections[0].value = format!(
+                        "System: {}\nClass: {:?}\nSolar Mass: {:.2} MS\nPlanets: {}\nAge: {:.1} Ga",
+                        systeme.nom,
+                        systeme.classe,
+                        systeme.masse_solaire,
+                        systeme.nb_planetes,
+                        systeme.age_milliards_annees
+                    );
+
+                    // Update the history
+                    *derniere_etoile_survolee = Some(entite_actuelle);
+                }
             } else {
-                // Si on est dans le vide spatial, on cache le panneau
+                // If in the vacuum of space, hide the panel
                 style_panneau.display = Display::None;
             }
         }
     }
 }
 
-fn initialiser_panneau_anecdotes(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer>) {
     let police = asset_server.load("../fonts/GeistPixel.ttf");
 
-    let lignes: Vec<&str> = FICHIER_ANECDOTES
-        .lines()
-        .filter(|l| !l.is_empty())
-        .collect();
+    let lignes: Vec<&str> = ANECDOTE_FILE.lines().filter(|l| !l.is_empty()).collect();
     let texte_initial = if !lignes.is_empty() {
         let temps_actuel = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_millis() as usize;
 
-        // On utilise ce nombre pour choisir une ligne au "hasard" mdr
         let index_aleatoire = temps_actuel % lignes.len();
 
         lignes[index_aleatoire]
     } else {
-        "Base de données vide."
+        "Empty database."
     };
 
     commands
@@ -244,7 +241,7 @@ fn initialiser_panneau_anecdotes(mut commands: Commands, asset_server: Res<Asset
         });
 }
 
-fn mettre_a_jour_anecdotes(
+fn update_anecdotes(
     temps: Res<Time>,
     mut chrono: ResMut<ChronoAnecdote>,
     mut requete_texte: Query<&mut Text, With<TexteAnecdote>>,
@@ -252,10 +249,7 @@ fn mettre_a_jour_anecdotes(
     chrono.0.tick(temps.delta());
 
     if chrono.0.just_finished() {
-        let lignes: Vec<&str> = FICHIER_ANECDOTES
-            .lines()
-            .filter(|l| !l.is_empty())
-            .collect();
+        let lignes: Vec<&str> = ANECDOTE_FILE.lines().filter(|l| !l.is_empty()).collect();
 
         if lignes.is_empty() {
             return;
@@ -267,7 +261,7 @@ fn mettre_a_jour_anecdotes(
             .as_millis() as usize;
         let index_aleatoire = temps_actuel % lignes.len();
 
-        // On met à jour le texte
+        // Update the text
         let mut texte = requete_texte.single_mut();
         texte.sections[0].value = format!("{}", lignes[index_aleatoire]);
     }
@@ -279,7 +273,7 @@ mod tests {
     use bevy::diagnostic::Diagnostic;
 
     #[test]
-    fn test_initialiser_fps_cree_composants() {
+    fn test_initialize_fps_cree_composants() {
         // Create a new empty Bevy App
         let mut app = App::new();
 
@@ -288,7 +282,7 @@ mod tests {
         app.init_asset::<Font>();
 
         // Add our system to the Startup schedule
-        app.add_systems(Startup, initialiser_fps);
+        app.add_systems(Startup, initialize_fps);
 
         // Run the app for one frame to execute the Startup schedule
         app.update();
@@ -300,17 +294,17 @@ mod tests {
         let texte = requete_texte.single(app.world());
 
         // Verify that the initial text is correct
-        assert_eq!(texte.sections[0].value, "FPS: calcul...");
+        assert_eq!(texte.sections[0].value, "FPS: calculation...");
     }
 
     #[test]
-    fn test_initialiser_fps_position_correcte() {
+    fn test_initialize_fps_position_correcte() {
         let mut app = App::new();
 
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Font>();
 
-        app.add_systems(Startup, initialiser_fps);
+        app.add_systems(Startup, initialize_fps);
         app.update();
 
         // The TexteFps is a child of the main NodeBundle.
@@ -336,37 +330,37 @@ mod tests {
     fn test_mettre_a_jour_fps_affiche_valeur_arrondie() {
         let mut app = App::new();
 
-        // Instancier l'entité texte avec les composants requis
+        // Instantiate the text entity with the required components
         let entite = app
             .world_mut()
             .spawn((
-                TextBundle::from_section("FPS: calcul...", TextStyle::default()),
+                TextBundle::from_section("FPS: calculation...", TextStyle::default()),
                 TexteFps,
             ))
             .id();
 
-        // Simuler les diagnostics du moteur
+        // Simulate engine diagnostics
         let mut diagnostics = DiagnosticsStore::default();
         let mut diagnostic_fps = Diagnostic::new(FrameTimeDiagnosticsPlugin::FPS);
 
-        // On injecte manuellement une mesure factice de FPS (ex: 60.48)
+        // Manually inject a dummy FPS measurement (e.g., 60.48)
         diagnostic_fps.add_measurement(bevy::diagnostic::DiagnosticMeasurement {
             time: bevy::utils::Instant::now(),
             value: 60.48,
         });
         diagnostics.add(diagnostic_fps);
 
-        // On insère cette fausse base de données dans l'application de test
+        // We insert this mock database into the test application.
         app.insert_resource(diagnostics);
 
-        // Ajouter et exécuter notre système
-        app.add_systems(Update, mettre_a_jour_fps);
+        // Add and execute our system
+        app.add_systems(Update, update_fps);
         app.update();
 
-        // Vérifier le résultat
+        // Check the result
         let texte = app.world().get::<Text>(entite).unwrap();
 
-        // Le format {:.1} de votre système doit arrondir 60.48 à 60.5
+        // Your system's {:.1} format must round 60.48 to 60.5
         assert_eq!(texte.sections[0].value, "FPS: 60.5");
     }
 
@@ -374,59 +368,59 @@ mod tests {
     fn test_mettre_a_jour_fps_ignore_si_pas_de_donnees() {
         let mut app = App::new();
 
-        // On démarre avec le texte par défaut
+        // Start with the default text
         let entite = app
             .world_mut()
             .spawn((
-                TextBundle::from_section("FPS: calcul...", TextStyle::default()),
+                TextBundle::from_section("FPS: calculation...", TextStyle::default()),
                 TexteFps,
             ))
             .id();
 
-        // On prépare le conteneur de FPS, mais cette fois on n'ajoute AUCUNE mesure
+        // We prepare the FPS container, but this time we add NO measurements.
         let mut diagnostics = DiagnosticsStore::default();
         let diagnostic_fps = Diagnostic::new(FrameTimeDiagnosticsPlugin::FPS);
         diagnostics.add(diagnostic_fps);
         app.insert_resource(diagnostics);
 
-        app.add_systems(Update, mettre_a_jour_fps);
+        app.add_systems(Update, update_fps);
         app.update();
 
-        // On récupère le texte après l'exécution du système
+        // Retrieve the text after system execution
         let texte = app.world().get::<Text>(entite).unwrap();
 
-        // Puisque `fps.smoothed()` a renvoyé None, le texte n'a pas dû changer
-        assert_eq!(texte.sections[0].value, "FPS: calcul...");
+        // Since `fps.smoothed()` returned None, the text must not have changed.
+        assert_eq!(texte.sections[0].value, "FPS: calculation...");
     }
 
     #[test]
     fn test_initialiser_panneau_info_est_cache_par_defaut() {
         let mut app = App::new();
 
-        // Configuration indispensable pour charger la police sans erreur
+        // Essential configuration to load the font without errors
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Font>();
 
-        // Ajout et exécution du système
-        app.add_systems(Startup, initialiser_panneau_info);
+        // Adding and executing the system
+        app.add_systems(Startup, initialize_info_panel);
         app.update();
 
-        // On récupère le composant Style de notre panneau d'information
+        // Retrieve the Style component from our information panel
         let mut requete_panneau = app
             .world_mut()
             .query_filtered::<&Style, With<PanneauInfo>>();
 
-        // S'il n'y a pas exactement un PanneauInfo, le test va échouer
+        // If there isn't exactly one PanneauInfo, the test will fail.
         let style_panneau = requete_panneau.single(app.world());
 
-        // VÉRIFICATIONS CRITIQUES :
-        // Le panneau DOIT être invisible (Display::None) au démarrage
+        // CRITICAL CHECKS:
+        // The panel MUST be invisible (Display::None) at startup
         assert_eq!(style_panneau.display, Display::None);
 
-        // Le panneau doit avoir un positionnement absolu pour flotter sur l'écran
+        // The panel must have absolute positioning to float on the screen
         assert_eq!(style_panneau.position_type, PositionType::Absolute);
 
-        // Les éléments internes doivent être empilés en colonne
+        // Internal elements must be stacked in a column
         assert_eq!(style_panneau.flex_direction, FlexDirection::Column);
     }
 
@@ -436,17 +430,17 @@ mod tests {
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Font>();
 
-        app.add_systems(Startup, initialiser_panneau_info);
+        app.add_systems(Startup, initialize_info_panel);
         app.update();
 
-        // On cherche l'entité qui possède le marqueur TexteInfo
+        // Look for the entity that has the TexteInfo marker
         let mut requete_texte = app.world_mut().query_filtered::<&Text, With<TexteInfo>>();
         let texte = requete_texte.single(app.world());
 
-        // On vérifie le contenu par défaut
-        assert_eq!(texte.sections[0].value, "Données Stellaire");
+        // Check the default content
+        assert_eq!(texte.sections[0].value, "Stellar Data");
 
-        // On vérifie le style du texte (taille et couleur)
+        // Check the text style (size and color)
         assert_eq!(texte.sections[0].style.font_size, 18.0);
         assert_eq!(texte.sections[0].style.color, Color::WHITE);
     }

@@ -3,55 +3,55 @@ use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::HashSet;
 use bevy::window::PrimaryWindow;
 
-use crate::camera::CameraPrincipale;
+use crate::camera::MainCamera;
 use crate::generation;
 
 pub struct UniversPlugin;
 
 impl Plugin for UniversPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(GraineGlobale(42))
-            .init_resource::<SecteursCharges>()
+        app.insert_resource(GlobalSeed(42))
+            .init_resource::<LoadedSectors>()
             .add_systems(
                 Update,
                 (
-                    generer_univers_dynamique,
-                    garbage_collector_spatial,
-                    gerer_clic_etoile,
-                    animer_orbites,
-                    gerer_lod_planetes,
+                    generate_dynamic_universe,
+                    spatial_garbage_collector,
+                    handle_star_click,
+                    animate_orbits,
+                    handle_planet_lod,
                 ),
             );
     }
 }
 
 #[derive(Resource)]
-pub struct GraineGlobale(pub u32);
+pub struct GlobalSeed(pub u32);
 
 #[derive(Resource, Default)]
-pub struct SecteursCharges(pub HashSet<(i32, i32)>);
+pub struct LoadedSectors(pub HashSet<(i32, i32)>);
 
 #[derive(Component)]
-pub struct Etoile {
+pub struct Star {
     pub grille_x: i32,
     pub grille_y: i32,
 }
 
 #[derive(Component)]
-pub struct SystemeDeveloppe;
+pub struct ExpandedSystem;
 
 #[derive(Component)]
-pub struct Planete {
+pub struct Planet {
     pub rayon_orbite: f32,
     pub angle_actuel: f32,
     pub vitesse_orbite: f32,
 }
 
-fn generer_univers_dynamique(
+fn generate_dynamic_universe(
     mut commands: Commands,
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
-    graine: Res<GraineGlobale>,
-    mut secteurs_charges: ResMut<SecteursCharges>,
+    requete_camera: Query<&Transform, With<MainCamera>>,
+    graine: Res<GlobalSeed>,
+    mut secteurs_charges: ResMut<LoadedSectors>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut derniere_pos_maj: Local<Vec2>,
@@ -61,7 +61,7 @@ fn generer_univers_dynamique(
     let pos_actuelle = camera_transform.translation.truncate();
     let zoom = camera_transform.scale.x;
 
-    // Optimisation : On ne régénère que si la caméra bouge
+    // Optimization: Only regenerate if the camera moves
     if pos_actuelle.distance(*derniere_pos_maj) < 40.0 && (zoom - *dernier_zoom_maj).abs() < 0.1 {
         return;
     }
@@ -84,21 +84,21 @@ fn generer_univers_dynamique(
 
             secteurs_charges.0.insert((x, y));
 
-            let probabilite = generation::calculer_hachage_spatial(x, y, graine.0);
+            let probabilite = generation::calculate_spatial_hash(x, y, graine.0);
 
-            // Seuil de génération augmenté à 0.95 pour la performance et la clarté
+            // Generation threshold increased to 0.95 for performance and clarity
             if probabilite > 0.95 {
                 let systeme_stellaire =
-                    crate::astrophysique::generer_caracteristiques(x, y, probabilite);
+                    crate::astrophysique::generate_characteristics(x, y, probabilite);
 
                 let couleur_etoile = match systeme_stellaire.classe {
-                    crate::astrophysique::ClasseSpectrale::O => Color::srgb(0.3, 0.5, 1.0),
-                    crate::astrophysique::ClasseSpectrale::B => Color::srgb(0.6, 0.8, 1.0),
-                    crate::astrophysique::ClasseSpectrale::A => Color::srgb(1.0, 1.0, 1.0),
-                    crate::astrophysique::ClasseSpectrale::F => Color::srgb(1.0, 1.0, 0.8),
-                    crate::astrophysique::ClasseSpectrale::G => Color::srgb(1.0, 0.9, 0.2),
-                    crate::astrophysique::ClasseSpectrale::K => Color::srgb(1.0, 0.5, 0.1),
-                    crate::astrophysique::ClasseSpectrale::M => Color::srgb(0.9, 0.2, 0.2),
+                    crate::astrophysique::SpectralClass::O => Color::srgb(0.3, 0.5, 1.0),
+                    crate::astrophysique::SpectralClass::B => Color::srgb(0.6, 0.8, 1.0),
+                    crate::astrophysique::SpectralClass::A => Color::srgb(1.0, 1.0, 1.0),
+                    crate::astrophysique::SpectralClass::F => Color::srgb(1.0, 1.0, 0.8),
+                    crate::astrophysique::SpectralClass::G => Color::srgb(1.0, 0.9, 0.2),
+                    crate::astrophysique::SpectralClass::K => Color::srgb(1.0, 0.5, 0.1),
+                    crate::astrophysique::SpectralClass::M => Color::srgb(0.9, 0.2, 0.2),
                 };
 
                 let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
@@ -114,7 +114,7 @@ fn generer_univers_dynamique(
                         ),
                         ..default()
                     },
-                    Etoile {
+                    Star {
                         grille_x: x,
                         grille_y: y,
                     },
@@ -125,11 +125,11 @@ fn generer_univers_dynamique(
     }
 }
 
-pub fn garbage_collector_spatial(
+pub fn spatial_garbage_collector(
     mut commands: Commands,
-    requete_camera: Query<&Transform, With<CameraPrincipale>>,
-    requete_etoiles: Query<(Entity, &Etoile)>,
-    mut secteurs_charges: ResMut<SecteursCharges>,
+    requete_camera: Query<&Transform, With<MainCamera>>,
+    requete_etoiles: Query<(Entity, &Star)>,
+    mut secteurs_charges: ResMut<LoadedSectors>,
     mut derniere_pos_maj: Local<Vec2>,
     mut dernier_zoom_maj: Local<f32>,
 ) {
@@ -165,9 +165,9 @@ pub fn garbage_collector_spatial(
     });
 }
 
-fn gerer_lod_planetes(
-    requete_camera: Query<&Transform, (With<CameraPrincipale>, Changed<Transform>)>,
-    mut requete_planetes: Query<&mut Visibility, With<Planete>>,
+fn handle_planet_lod(
+    requete_camera: Query<&Transform, (With<MainCamera>, Changed<Transform>)>,
+    mut requete_planetes: Query<&mut Visibility, With<Planet>>,
 ) {
     if let Ok(camera_transform) = requete_camera.get_single() {
         let zoom = camera_transform.scale.x;
@@ -186,17 +186,17 @@ fn gerer_lod_planetes(
     }
 }
 
-fn gerer_clic_etoile(
+fn handle_star_click(
     mut commands: Commands,
     touches_souris: Res<ButtonInput<MouseButton>>,
     requete_fenetre: Query<&Window, With<PrimaryWindow>>,
-    requete_camera: Query<(&Camera, &GlobalTransform), With<CameraPrincipale>>,
+    requete_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     requete_etoiles: Query<(
         Entity,
         &Transform,
-        &crate::astrophysique::SystemeStellaire,
-        Option<&SystemeDeveloppe>,
-        &Etoile,
+        &crate::astrophysique::StellarSystem,
+        Option<&ExpandedSystem>,
+        &Star,
     )>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -227,7 +227,7 @@ fn gerer_clic_etoile(
                     if developpe.is_none() {
                         commands
                             .entity(entite)
-                            .insert(SystemeDeveloppe)
+                            .insert(ExpandedSystem)
                             .with_children(|parent| {
                                 for i in 0..systeme.nb_planetes {
                                     let rayon_orbite = 15.0 + (i as f32 * 10.0);
@@ -247,7 +247,7 @@ fn gerer_clic_etoile(
                                             ),
                                             ..default()
                                         },
-                                        Planete {
+                                        Planet {
                                             rayon_orbite,
                                             angle_actuel: angle_depart,
                                             vitesse_orbite: vitesse,
@@ -256,7 +256,7 @@ fn gerer_clic_etoile(
                                 }
                             });
                     } else {
-                        commands.entity(entite).remove::<SystemeDeveloppe>();
+                        commands.entity(entite).remove::<ExpandedSystem>();
                         commands.entity(entite).despawn_descendants();
                     }
                     break;
@@ -266,9 +266,9 @@ fn gerer_clic_etoile(
     }
 }
 
-pub fn animer_orbites(
+pub fn animate_orbits(
     temps: Res<Time>,
-    mut requete_planetes: Query<(&mut Transform, &mut Planete)>,
+    mut requete_planetes: Query<(&mut Transform, &mut Planet)>,
 ) {
     for (mut transform, mut planete) in requete_planetes.iter_mut() {
         planete.angle_actuel += planete.vitesse_orbite * temps.delta_seconds();
@@ -280,280 +280,280 @@ pub fn animer_orbites(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::astrophysique::{ClasseSpectrale, SystemeStellaire};
+    use crate::astrophysique::{SpectralClass, StellarSystem};
     use bevy::render::camera::CameraProjection;
     use bevy::window::PrimaryWindow;
     use std::time::Duration;
 
-    // --- Fonction utilitaire pour préparer l'environnement ---
+    // --- Utility function to prepare the environment ---
     fn preparer_app() -> App {
         let mut app = App::new();
 
-        // Les assets sont requis pour les MaterialMesh2dBundle générés
+        // Assets are required for the generated MaterialMesh2dBundles
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
 
         app.init_asset::<Mesh>();
         app.init_asset::<ColorMaterial>();
 
-        // Initialisation des ressources requises par le système
-        app.insert_resource(GraineGlobale(42));
+        // Initialization of resources required by the system
+        app.insert_resource(GlobalSeed(42));
 
-        // OBLIGATOIRE : Initialisation du HashSet pour éviter un crash "Resource does not exist"
-        app.init_resource::<SecteursCharges>();
+        // MANDATORY: Initialize the HashSet to avoid a "Resource does not exist" crash.
+        app.init_resource::<LoadedSectors>();
 
-        // Création de notre caméra principale au centre (0, 0)
+        // Creating our main camera at the center (0, 0)
         app.world_mut()
-            .spawn((Camera2dBundle::default(), CameraPrincipale));
+            .spawn((Camera2dBundle::default(), MainCamera));
 
         app
     }
 
-    // --- Fonction utilitaire pour préparer l'environnement ---
+    // --- Utility function to prepare the environment ---
     fn preparer_app_gc() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
 
-        // La ressource SecteursCharges doit exister
-        app.init_resource::<SecteursCharges>();
+        // The LoadedSectors resource must exist
+        app.init_resource::<LoadedSectors>();
 
-        // Création de notre caméra (par défaut en 0, 0, avec un scale/zoom de 1.0)
+        // Creating our camera (defaulting to 0, 0, with a scale/zoom of 1.0)
         app.world_mut()
-            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), CameraPrincipale));
+            .spawn((Transform::from_xyz(0.0, 0.0, 0.0), MainCamera));
 
         app
     }
 
-    // --- Fonction utilitaire pour préparer l'environnement ---
+    // --- Utility function to prepare the environment ---
     fn preparer_app_clic() -> App {
         let mut app = App::new();
 
-        // Les assets sont requis pour faire apparaître les planètes (MaterialMesh2dBundle)
+        // Assets are required to display the planets (MaterialMesh2dBundle)
         app.add_plugins((MinimalPlugins, AssetPlugin::default()));
         app.init_asset::<Mesh>();
         app.init_asset::<ColorMaterial>();
 
-        // On initialise l'input de la souris
+        // Initialize mouse input
         app.init_resource::<ButtonInput<MouseButton>>();
 
-        // 1. Simuler une fenêtre avec la souris au centre (400, 300)
+        // Simulate a window with the mouse at the center (400, 300)
         let mut fenetre = Window::default();
         fenetre.set_cursor_position(Some(Vec2::new(400.0, 300.0)));
         app.world_mut().spawn((fenetre, PrimaryWindow));
 
-        // 2. Simuler la caméra centrée en 0,0
+        // Simulate the camera centered at (0, 0)
         let mut camera_bundle = Camera2dBundle::default();
         camera_bundle.projection.update(800.0, 600.0);
-        app.world_mut().spawn((camera_bundle, CameraPrincipale));
+        app.world_mut().spawn((camera_bundle, MainCamera));
 
         app
     }
 
-    // --- Fonction utilitaire pour préparer l'environnement ---
+    // --- Utility function to prepare the environment ---
     fn preparer_app_lod() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app
     }
 
-    // --- Initialisation et chargement du premier secteur ---
+    // --- Initialization and loading of the first sector ---
     #[test]
     fn test_generer_univers_charge_les_premiers_secteurs() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
-        // Au départ, le HashSet des secteurs chargés doit être vide
-        assert!(app.world().resource::<SecteursCharges>().0.is_empty());
+        // Initially, the HashSet of loaded sectors must be empty
+        assert!(app.world().resource::<LoadedSectors>().0.is_empty());
 
-        // On exécute le système une fois (la caméra est en 0,0)
+        // Execute the system once (the camera is at 0,0)
         app.update();
 
-        // Le système a dû marquer de nombreux secteurs (autour de 0,0) comme "chargés"
-        let secteurs = app.world().resource::<SecteursCharges>();
+        // The system must have marked numerous sectors (around 0.0) as "loaded"
+        let secteurs = app.world().resource::<LoadedSectors>();
         assert!(
             !secteurs.0.is_empty(),
-            "Les secteurs autour de la caméra auraient dû être générés"
+            "The sectors around the camera should have been generated."
         );
 
-        // On vérifie si des entités Étoile ont été créées dans l'univers
-        // (Avec la graine 42 et un rayon > 10, il y a mathématiquement des étoiles générées)
-        let mut requete_etoiles = app.world_mut().query::<&Etoile>();
+        // Check if Star entities have been created in the universe
+        let mut requete_etoiles = app.world_mut().query::<&Star>();
         let nombre_etoiles = requete_etoiles.iter(app.world()).count();
 
         assert!(
             nombre_etoiles > 0,
-            "Au moins une étoile aurait dû apparaître avec cette graine"
+            "At least one star should have appeared with this seed."
         );
     }
 
-    // --- Optimisation (Ignorer les petits mouvements) ---
+    // --- Optimization (Ignore small movements) ---
     #[test]
     fn test_generer_univers_ignore_les_micro_mouvements() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
-        // 1ère frame : Initialisation (la position (0,0) est enregistrée dans le `Local`)
+        // 1st frame: Initialization (position (0,0) is stored in `Local`)
         app.update();
 
-        // On mémorise le nombre exact de secteurs actuellement chargés
-        let secteurs_avant = app.world().resource::<SecteursCharges>().0.len();
+        // Store the exact number of currently loaded sectors
+        let secteurs_avant = app.world().resource::<LoadedSectors>().0.len();
 
         // On simule un tout petit mouvement de la caméra (distance < 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 15.0;
 
-        // 2ème frame
+        // 2nd frame
         app.update();
 
-        // L'optimisation (le `return` de la ligne 61) doit avoir fonctionné.
-        // Aucun nouveau secteur ne doit avoir été calculé.
-        let secteurs_apres = app.world().resource::<SecteursCharges>().0.len();
+        // The optimization (the `return` on line 61) must have worked.
+        // No new sector must have been calculated.
+        let secteurs_apres = app.world().resource::<LoadedSectors>().0.len();
         assert_eq!(
             secteurs_avant, secteurs_apres,
-            "La fonction aurait dû retourner prématurément sans charger de nouveaux secteurs"
+            "The function should have returned early without loading new sectors."
         );
     }
 
-    // --- Génération après un grand déplacement ---
+    // --- Generation after a large displacement ---
     #[test]
     fn test_generer_univers_reprend_apres_grand_deplacement() {
         let mut app = preparer_app();
-        app.add_systems(Update, generer_univers_dynamique);
+        app.add_systems(Update, generate_dynamic_universe);
 
-        // 1ère frame (initialisation)
+        // 1st frame (initialization)
         app.update();
-        let secteurs_avant = app.world().resource::<SecteursCharges>().0.len();
+        let secteurs_avant = app.world().resource::<LoadedSectors>().0.len();
 
-        // On téléporte la caméra très loin (distance > 40.0)
+        // Teleport the camera very far away (distance > 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 1000.0;
         transform.translation.y += 1000.0;
 
-        // 2ème frame
+        // 2nd frame
         app.update();
 
-        // Le seuil de 40.0 étant dépassé, la fonction a dû calculer la nouvelle zone spatiale
-        let secteurs_apres = app.world().resource::<SecteursCharges>().0.len();
+        // The 40.0 threshold having been exceeded, the function had to calculate the new spatial zone.
+        let secteurs_apres = app.world().resource::<LoadedSectors>().0.len();
         assert!(
             secteurs_apres > secteurs_avant,
-            "La caméra s'est téléportée de 1000 unités, de nouveaux secteurs auraient dû être chargés"
+            "The camera teleported 1,000 units; new sectors should have been loaded."
         );
     }
 
-    // --- Nettoyage effectif ---
+    // --- Effective cleaning ---
     #[test]
     fn test_garbage_collector_nettoie_hors_limites() {
         let mut app = preparer_app_gc();
-        app.add_systems(Update, garbage_collector_spatial);
+        app.add_systems(Update, spatial_garbage_collector);
 
-        // On peuple l'univers avec deux étoiles et deux secteurs correspondants
+        // Populate the universe with two stars and two corresponding sectors
         let entite_proche = app
             .world_mut()
-            .spawn(Etoile {
+            .spawn(Star {
                 grille_x: 2,
                 grille_y: 2,
             })
             .id();
-        // Une étoile très lointaine (grille 50, soit 4000 pixels de distance)
+
+        // A very distant star (grid 50, i.e., a distance of 4000 pixels)
         let entite_lointaine = app
             .world_mut()
-            .spawn(Etoile {
+            .spawn(Star {
                 grille_x: 50,
                 grille_y: 50,
             })
             .id();
 
-        let mut secteurs = app.world_mut().resource_mut::<SecteursCharges>();
+        let mut secteurs = app.world_mut().resource_mut::<LoadedSectors>();
         secteurs.0.insert((2, 2));
         secteurs.0.insert((50, 50));
 
-        // Pour forcer l'exécution du Garbage Collector, on déplace la caméra d'au moins 40 unités.
-        // Sinon, la variable Local<Vec2> initialisée à (0,0) provoquera un "return" prématuré.
+        // To force the Garbage Collector to run, move the camera by at least 40 units.
+        // Otherwise, the Local<Vec2> variable initialized to (0,0) will cause a premature return.
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
-        camera_transform.translation.x = 100.0; // Centre grille recalculé à environ (1, 0)
+        camera_transform.translation.x = 100.0; // Grid center recalculated to approximately (1, 0)
 
         app.update();
 
         // --- VÉRIFICATIONS ---
 
-        // L'étoile proche doit avoir survécu
+        // The nearby star must have survived
         assert!(app.world().get_entity(entite_proche).is_some());
 
-        // L'étoile lointaine a dû être désintégrée (despawn_recursive) par le système
+        // The distant star must have been disintegrated (despawn_recursive) by the system.
         assert!(app.world().get_entity(entite_lointaine).is_none());
 
-        // Le HashSet des secteurs chargés a dû être purgé de la coordonnée lointaine
-        let secteurs_apres = app.world().resource::<SecteursCharges>();
+        // The HashSet of loaded sectors had to be purged of the distant coordinate.
+        let secteurs_apres = app.world().resource::<LoadedSectors>();
         assert!(secteurs_apres.0.contains(&(2, 2)));
         assert!(
             !secteurs_apres.0.contains(&(50, 50)),
-            "Le secteur lointain aurait dû être retiré de la mémoire"
+            "The distant sector should have been removed from memory."
         );
     }
 
-    // --- L'optimisation locale ---
+    // --- Local optimization ---
     #[test]
     fn test_garbage_collector_ignore_les_micro_mouvements() {
         let mut app = preparer_app_gc();
-        app.add_systems(Update, garbage_collector_spatial);
+        app.add_systems(Update, spatial_garbage_collector);
 
-        // Frame 1 : On place la caméra très loin pour initialiser les variables locales `derniere_pos_maj`
+        // Frame 1: The camera is placed very far away to initialize the local variables `derniere_pos_maj`
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x = 1000.0;
         app.update();
 
-        // On crée une étoile complètement hors de portée
+        // Create a star completely out of reach
         let entite_lointaine = app
             .world_mut()
-            .spawn(Etoile {
+            .spawn(Star {
                 grille_x: 9999,
                 grille_y: 9999,
             })
             .id();
 
-        // Frame 2 : On simule un mouvement de 10 unités (< 40.0)
+        // Frame 2: Simulate a movement of 10 units (< 40.0)
         let mut requete_camera = app
             .world_mut()
-            .query_filtered::<&mut Transform, With<CameraPrincipale>>();
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x += 10.0;
 
         app.update();
 
-        // Puisque le mouvement est trop faible, le système a dû faire un `return` à la ligne 61.
-        // L'entité lointaine n'a donc pas été nettoyée, prouvant que l'optimisation fonctionne.
+        // Since the movement is too weak, the system had to execute a `return` at line 61.
+        // The distant entity was therefore not cleaned up, proving that the optimization works.
         assert!(
             app.world().get_entity(entite_lointaine).is_some(),
             "Le GC n'aurait pas dû s'exécuter"
         );
     }
 
-    // --- Masquage lors d'un dézoom ---
+    // --- Masking during zooming out ---
     #[test]
     fn test_gerer_lod_cache_les_planetes_si_zoom_superieur_au_seuil() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
-        // On crée une caméra avec un zoom (scale.x) supérieur au seuil de 3.5
+        // Create a camera with a zoom (scale.x) greater than the threshold of 3.5
         app.world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(4.0)), CameraPrincipale));
+            .spawn((Transform::from_scale(Vec3::splat(4.0)), MainCamera));
 
-        // On crée une planète qui est actuellement visible (Inherited)
+        // Create a planet that is currently visible (Inherited)
         let entite_planete = app
             .world_mut()
             .spawn((
-                Planete {
+                Planet {
                     rayon_orbite: 10.0,
                     angle_actuel: 0.0,
                     vitesse_orbite: 1.0,
@@ -564,26 +564,26 @@ mod tests {
 
         app.update();
 
-        // Le système doit avoir détecté le zoom > 3.5 et caché la planète
+        // The system must have detected a zoom level > 3.5 and hidden the planet.
         let visibilite = app.world().get::<Visibility>(entite_planete).unwrap();
         assert_eq!(*visibilite, Visibility::Hidden);
     }
 
-    // --- Affichage lors d'un zoom ---
+    // --- Display when zooming ---
     #[test]
     fn test_gerer_lod_affiche_les_planetes_si_zoom_inferieur_au_seuil() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
-        // On crée une caméra avec un zoom très proche (inférieur au seuil de 3.5)
+        // Create a camera with a very close zoom (below the 3.5 threshold)
         app.world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(1.0)), CameraPrincipale));
+            .spawn((Transform::from_scale(Vec3::splat(1.0)), MainCamera));
 
-        // On crée une planète actuellement cachée
+        // We create a planet that is currently hidden
         let entite_planete = app
             .world_mut()
             .spawn((
-                Planete {
+                Planet {
                     rayon_orbite: 10.0,
                     angle_actuel: 0.0,
                     vitesse_orbite: 1.0,
@@ -594,54 +594,54 @@ mod tests {
 
         app.update();
 
-        // Le système doit avoir restauré la visibilité normale (Inherited) de la planète
+        // The system must have restored the planet's normal visibility (Inherited).
         let visibilite = app.world().get::<Visibility>(entite_planete).unwrap();
         assert_eq!(*visibilite, Visibility::Inherited);
     }
 
-    // --- L'optimisation Changed<Transform> ---
+    // --- Changed<Transform> Optimization  ---
     #[test]
     fn test_gerer_lod_ne_fait_rien_si_camera_immobile() {
         let mut app = preparer_app_lod();
-        app.add_systems(Update, gerer_lod_planetes);
+        app.add_systems(Update, handle_planet_lod);
 
-        // On crée la caméra
+        // Create the camera
         let entite_camera = app
             .world_mut()
-            .spawn((Transform::from_scale(Vec3::splat(2.0)), CameraPrincipale))
+            .spawn((Transform::from_scale(Vec3::splat(2.0)), MainCamera))
             .id();
 
         let entite_planete = app
             .world_mut()
             .spawn((
-                Planete {
+                Planet {
                     rayon_orbite: 10.0,
                     angle_actuel: 0.0,
                     vitesse_orbite: 1.0,
                 },
-                // On la force à un état incorrect par rapport au zoom pour tester le filtre
+                // Force it into an incorrect state relative to the zoom to test the filter
                 Visibility::Hidden,
             ))
             .id();
 
-        // Première frame : Le composant vient d'être créé, il compte comme "Changed".
-        // Le système va donc corriger la visibilité à Inherited.
+        // First frame: The component has just been created; it counts as "Changed".
+        // The system will therefore correct the visibility to Inherited.
         app.update();
         assert_eq!(
             *app.world().get::<Visibility>(entite_planete).unwrap(),
             Visibility::Inherited
         );
 
-        // On la force MANUELLEMENT à Hidden à nouveau
+        // We manually force it to Hidden again
         *app.world_mut()
             .get_mut::<Visibility>(entite_planete)
             .unwrap() = Visibility::Hidden;
 
-        // Deuxième frame : La caméra n'a pas été modifiée !
+        // Second frame: The camera has not been modified!
         app.update();
 
-        // Comme la caméra n'a pas bougé, la requête Changed<Transform> renvoie une erreur
-        // Le système ne s'est pas exécuté, la planète est donc restée dans son état forcé (Hidden).
+        // Since the camera has not moved, the Changed<Transform> query returns an error.
+        // The system did not execute, so the planet remained in its forced state (Hidden).
         let visibilite_finale = app.world().get::<Visibility>(entite_planete).unwrap();
         assert_eq!(
             *visibilite_finale,
@@ -649,7 +649,7 @@ mod tests {
             "Le système a ignoré le filtre Changed<Transform>"
         );
 
-        // Troisième frame : On bouge la caméra
+        // Third frame: Move the camera
         app.world_mut()
             .get_mut::<Transform>(entite_camera)
             .unwrap()
@@ -657,104 +657,104 @@ mod tests {
             .x = 2.1;
         app.update();
 
-        // Le système s'est réveillé et a corrigé la visibilité
+        // The system woke up and corrected the visibility.
         assert_eq!(
             *app.world().get::<Visibility>(entite_planete).unwrap(),
             Visibility::Inherited
         );
     }
 
-    // --- Ignorer si aucun clic n'est détecté ---
+    // --- Ignore if no click is detected ---
     #[test]
     fn test_gerer_clic_ignore_si_pas_de_clic() {
         let mut app = preparer_app_clic();
-        app.add_systems(Update, gerer_clic_etoile);
+        app.add_systems(Update, handle_star_click);
 
-        // On fait apparaître une étoile au centre
+        // A star appears in the center.
         let entite_etoile = app
             .world_mut()
             .spawn((
                 Transform::from_xyz(0.0, 0.0, 0.0),
-                SystemeStellaire {
+                StellarSystem {
                     nom: "Test-Beta".to_string(),
-                    classe: ClasseSpectrale::G,
+                    classe: SpectralClass::G,
                     masse_solaire: 1.0,
                     rayon_solaire: 1.0,
                     nb_planetes: 2,
                     age_milliards_annees: 4.0,
                 },
-                Etoile {
+                Star {
                     grille_x: 0,
                     grille_y: 0,
                 },
             ))
             .id();
 
-        // On lance le système SANS simuler de clic de souris
+        // We launch the system without simulating a mouse click.
         app.update();
 
-        // L'étoile ne doit pas avoir reçu le composant SystemeDeveloppe
-        assert!(app.world().get::<SystemeDeveloppe>(entite_etoile).is_none());
+        // The star must not have received the ExpandedSystem component.
+        assert!(app.world().get::<ExpandedSystem>(entite_etoile).is_none());
     }
 
     #[test]
     fn test_animer_orbites_calcule_position_et_angle_correctement() {
         let mut app = App::new();
 
-        // Initialisation du temps simulé
-        // On déclare explicitement le type `: Time` pour aider le compilateur
+        // Initialization of simulated time
+        // We explicitly declare the type `: Time` to help the compiler
         let mut time: Time = Time::default();
 
-        // On avance le temps d'exactement 0.5 seconde
+        // Advance time by exactly 0.5 seconds
         time.advance_by(Duration::from_secs_f32(0.5));
         app.insert_resource(time);
 
-        // Création de notre planète de test
+        // Creating our test planet
         let rayon = 100.0;
-        // On définit une vitesse d'orbite de PI radians par seconde (un demi-tour par seconde)
+        // We define an orbital speed of PI radians per second (half a revolution per second)
         let vitesse = std::f32::consts::PI;
 
         let entite = app
             .world_mut()
             .spawn((
-                // La position de départ n'a aucune importance,
-                // car votre système écrase la valeur X et Y quoi qu'il arrive.
+                // The starting position is irrelevant.
+                // because your system overwrites the X and Y values ​​no matter what.
                 Transform::default(),
-                Planete {
+                Planet {
                     rayon_orbite: rayon,
-                    angle_actuel: 0.0, // Départ à 0 radian (tout à droite du cercle)
+                    angle_actuel: 0.0,
                     vitesse_orbite: vitesse,
                 },
             ))
             .id();
 
-        // Exécution du système
-        app.add_systems(Update, animer_orbites);
+        // System execution
+        app.add_systems(Update, animate_orbits);
         app.update();
 
-        // Vérifications mathématiques
-        let planete = app.world().get::<Planete>(entite).unwrap();
+        // Mathematical checks
+        let planete = app.world().get::<Planet>(entite).unwrap();
         let transform = app.world().get::<Transform>(entite).unwrap();
 
-        // L'angle actuel a dû augmenter selon la formule : vitesse * delta_seconds[cite: 2]
-        // PI rad/s * 0.5s = PI/2 rad (soit 90 degrés, le sommet du cercle)
+        // The current angle had to increase according to the formula: speed * delta_seconds
+        // PI rad/s * 0.5s = PI/2 rad (i.e., 90 degrees, the top of the circle)
         let angle_attendu = vitesse * 0.5;
         assert_eq!(planete.angle_actuel, angle_attendu);
 
-        // À PI/2 (90 degrés) sur un cercle de rayon 100 :
-        // cos(PI/2) est environ 0.0 -> La position X doit être 0.0[cite: 2]
-        // sin(PI/2) est 1.0 -> La position Y doit être 100.0[cite: 2]
+        // At π/2 (90 degrees) on a circle with a radius of 100:
+        // cos(PI/2) is approximately 0.0 -> The X position must be 0.0
+        // sin(PI/2) is 1.0 -> The Y position must be 100.0
         let difference_x = (transform.translation.x - 0.0).abs();
         let difference_y = (transform.translation.y - 100.0).abs();
 
-        // On utilise toujours une tolérance (Delta) pour les flottants
+        // We always use a tolerance (Delta) for floating-point numbers
         assert!(
             difference_x < 0.0001,
-            "La position X calculée avec le cosinus est incorrecte"
+            "The X position calculated using the cosine is incorrect."
         );
         assert!(
             difference_y < 0.0001,
-            "La position Y calculée avec le sinus est incorrecte"
+            "The Y position calculated using the sine is incorrect."
         );
     }
 }

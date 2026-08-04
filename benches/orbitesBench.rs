@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::time::Duration;
 
-// On importe la fonction et le composant depuis ton jeu
-use StellarHash::univers::{Planete, animer_orbites};
+// Import the function and the component from your game
+use StellarHash::univers::{Planet, animate_orbits};
 
-fn preparer_app_orbites(nb_planetes: u32) -> App {
+fn prepare_orbits_app(nb_planetes: u32) -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
@@ -16,7 +16,7 @@ fn preparer_app_orbites(nb_planetes: u32) -> App {
     for i in 0..nb_planetes {
         app.world_mut().spawn((
             Transform::default(),
-            Planete {
+            Planet {
                 rayon_orbite: 50.0 + (i as f32 % 10.0),
                 angle_actuel: 0.0,
                 vitesse_orbite: 1.5,
@@ -24,26 +24,26 @@ fn preparer_app_orbites(nb_planetes: u32) -> App {
         ));
     }
 
-    app.add_systems(Update, animer_orbites);
+    app.add_systems(Update, animate_orbits);
 
     app.update();
 
     app
 }
 
-fn bench_animer_orbites(c: &mut Criterion) {
-    // 1 000 planètes affichées
-    c.bench_function("animer_orbites_1000_planetes", |b| {
-        let mut app = preparer_app_orbites(1_000);
+fn bench_animate_orbits(c: &mut Criterion) {
+    // 1 000 planets displayed
+    c.bench_function("animate_orbits_1000_planets", |b| {
+        let mut app = prepare_orbits_app(1_000);
         b.iter(|| app.update());
     });
 
-    // 100 000 planètes
-    c.bench_function("animer_orbites_100000_planetes", |b| {
-        let mut app = preparer_app_orbites(100_000);
+    // 100 000 planets
+    c.bench_function("animate_orbits_100000_planets", |b| {
+        let mut app = prepare_orbits_app(100_000);
         b.iter(|| app.update());
     });
 }
 
-criterion_group!(benches, bench_animer_orbites);
+criterion_group!(benches, bench_animate_orbits);
 criterion_main!(benches);
