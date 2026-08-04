@@ -2,7 +2,9 @@
 
 > Thank you for considering contributing!
 
-Contributions of any size are welcome. Before starting work on a major feature, please open an Issue to discuss it first. This ensures your work aligns with the project's direction and saves everyone time.
+Contributions of any size are welcome.    
+Before starting work on a major feature or bug fix, please open an Issue **using the provided Issue Templates** to discuss it first.    
+This ensures your work aligns with the project's direction and saves everyone time.   
 
 ## Prerequisites
 
@@ -48,10 +50,10 @@ Examples:
 
 Before opening a PR, make sure:
 
-- [ ] Tests pass
-- [ ] Code is formatted
-- [ ] Clippy reports no warnings
-- [ ] Documentation is updated
+- [X] Tests pass
+- [X] Code is formatted
+- [X] Clippy reports no warnings
+- [X] Documentation is updated
 
 ## Code style
 
