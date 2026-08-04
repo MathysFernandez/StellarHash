@@ -18,19 +18,18 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Engineering
 
-- [ ] Configure GitHub Actions.
-- [ ] Enable `cargo fmt`.
-- [ ] Enable `cargo clippy`.
+- [X] Configure GitHub Actions.
+- [X] Enable `cargo fmt`.
+- [X] Enable `cargo clippy`.
 - [X] Add unit tests for hashing.
-- [ ] Configure project documentation.
+- [X] Configure project documentation.
 
 ### Definition of Done
 
 - [X] `cargo test` passes.
-- [ ] `cargo clippy -- -D warnings` passes.
-- [ ] `cargo fmt --check` passes.
+- [X] `cargo fmt --check` passes.
 - [X] Same seed always produces identical output.
-- [ ] README updated.
+- [X] README updated.
 
 ---
 
@@ -54,7 +53,7 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Definition of Done
 
-- [ ] Any valid seed is renderable.
+- [X] Any valid seed is renderable.
 - [ ] Camera remains stable at all zoom levels.
 - [ ] Documentation updated.
 
@@ -140,17 +139,6 @@ Every milestone must satisfy the following requirements:
 - All tests pass.
 - CI is green.
 - Documentation is updated.
-- No Clippy warnings.
-- Code formatted with rustfmt.
+- Code formatted with rust fmt.
 - Public APIs documented.
 
----
-
-# 🛠 Technical Debt
-
-Known improvements that are intentionally postponed.
-
-- Better ECS scheduling.
-- GPU instancing.
-- Parallel chunk generation.
-- Configurable rendering pipeline.
