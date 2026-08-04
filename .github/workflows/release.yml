@@ -1,4 +1,4 @@
-name: Build and Release StellarHash
+name: Build and Release
 
 # Ce workflow s'active uniquement quand on pousse un tag qui commence par "v"
 on:
@@ -50,7 +50,12 @@ jobs:
           # On zippe le tout
           cd distribution
           zip -r ../StellarHash_Linux.zip *
-
+      
+      - name: Générer le Changelog (Conventional Commits)
+        uses: orhun/git-cliff-action@v4
+        with:
+          args: -o release_notes.md --unreleased --strip header
+      
       - name: Publier la Release sur GitHub
         uses: softprops/action-gh-release@v2
         with:
