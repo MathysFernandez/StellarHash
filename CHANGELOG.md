@@ -12,10 +12,21 @@
 - *(roadmap)* Add ROADMAP.mp introduction and initial milestones
 - Add Cargo_doc.pdf
 - Update Cargo_doc_[EN]
+- Add Pull request template (.md)
+- Add Conventional Commits
+- Add SECURITY.md
+- Update ROADMAP file
+
+### ⚡ Performance
+
+- Optimized display of star characteristics (using the rising edge)
 
 ### 🎨 Styling
 
 - *(astrophysique)* Spacing adjustment
+- Translation of comments from french to english
+- Translation of function names in all Rust source files
+- Translate the benchmark files
 
 ### 🧪 Testing
 
@@ -40,6 +51,7 @@
 - *(changelog)* Mise à jour du CHANGELOG
 - Add a Issues Templates: Report a bug
 - Add a rename_issues.yml file 
+- *(changelog)* Mise à jour du CHANGELOG
 ## [0.1] - 2026-07-20
 
 ### 🚀 Features
