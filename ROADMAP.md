@@ -18,6 +18,7 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Engineering
 
+- [X] Benchmark generation performance.
 - [X] Configure GitHub Actions.
 - [X] Enable `cargo fmt`.
 - [X] Enable `cargo clippy`.
@@ -44,6 +45,8 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 - [X] Camera controls.
 - [ ] Display current seed.
 - [ ] Display generation statistics.
+- [X] Implement dynamic hover UI for star telemetry
+- [X] Add deep space transmissions (astrophysics facts)
 
 ### Engineering
 
@@ -73,7 +76,6 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 
 ### Engineering
 
-- [ ] Benchmark generation performance.
 - [ ] Add property tests.
 - [ ] Improve serialization.
 
@@ -121,8 +123,8 @@ Each milestone has a clear objective, acceptance criteria, and engineering requi
 ### Engineering
 
 - [ ] API documentation.
-- [ ] Release binaries.
-- [ ] Changelog.
+- [X] Release binaries.
+- [X] Changelog.
 
 ### Definition of Done
 
