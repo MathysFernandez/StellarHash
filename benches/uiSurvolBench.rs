@@ -8,7 +8,7 @@ use StellarHash::ui::{PanneauInfo, TexteInfo, manage_mouse_hover};
 use StellarHash::univers::Star;
 
 /// Function to prepare a dummy game containing N stars
-fn preparer_app_survol(nb_etoiles: i32) -> App {
+fn prepare_overview_app(nb_etoiles: i32) -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
@@ -55,19 +55,19 @@ fn preparer_app_survol(nb_etoiles: i32) -> App {
     app
 }
 
-fn bench_survol_souris(c: &mut Criterion) {
+fn bench_mouse_hover(c: &mut Criterion) {
     // Test with 1,000 stars on screen
     c.bench_function("mouse_hover_1000_stars", |b| {
-        let mut app = preparer_app_survol(1000);
+        let mut app = prepare_overview_app(1000);
         b.iter(|| app.update());
     });
 
     // Extreme test with 50,000 stars
     c.bench_function("mouse_hover_50000_stars", |b| {
-        let mut app = preparer_app_survol(50000);
+        let mut app = prepare_overview_app(50000);
         b.iter(|| app.update());
     });
 }
 
-criterion_group!(benches, bench_survol_souris);
+criterion_group!(benches, bench_mouse_hover);
 criterion_main!(benches);

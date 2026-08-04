@@ -6,7 +6,7 @@ use StellarHash::camera::MainCamera;
 use StellarHash::univers::{LoadedSectors, Star, spatial_garbage_collector};
 
 /// Utility function that recreates a test environment
-fn preparer_monde_surcharge() -> App {
+fn prepare_world_overload() -> App {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
 
@@ -34,9 +34,9 @@ fn preparer_monde_surcharge() -> App {
 }
 
 fn bench_garbage_collector(c: &mut Criterion) {
-    c.bench_function("garbage_collector_10000_etoiles", |b| {
+    c.bench_function("garbage_collector_10000_stars", |b| {
         b.iter_batched_ref(
-            || preparer_monde_surcharge(),
+            || prepare_world_overload(),
             |app| {
                 // Measured step: Launch 1 frame.
                 // The engine will detect the 10,000 distant entities, destroy them, and filter the HashSet.
