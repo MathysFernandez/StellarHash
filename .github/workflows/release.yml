@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -18,6 +19,8 @@ jobs:
     steps:
       - name: Récupérer le code source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Installer les dépendances système de Bevy (Linux)
         run: |
@@ -27,7 +30,7 @@ jobs:
       - name: Installer Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Mettre en cache Cargo (accélère les futures compilations)
+      - name: Mettre en cache Cargo
         uses: Swatinem/rust-cache@v2
 
       - name: Compiler en mode Release
@@ -52,4 +55,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: StellarHash_Linux.zip
-          generate_release_notes: true
+          body_path: release_notes.md
