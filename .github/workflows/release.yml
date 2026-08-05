@@ -53,8 +53,7 @@ jobs:
       - name: Générer le Changelog (Conventional Commits)
         uses: orhun/git-cliff-action@v4
         with:
-          #args: -o release_notes.md --latest --strip header
-          args: -o release_notes.md --strip header
+          args: -o release_notes.md --latest --strip header
       
       - name: Publier la Release sur GitHub
         uses: softprops/action-gh-release@v2
