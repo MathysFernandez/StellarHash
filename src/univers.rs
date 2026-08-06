@@ -20,6 +20,7 @@ impl Plugin for UniversPlugin {
                     handle_star_click,
                     animate_orbits,
                     handle_planet_lod,
+                    animate_star_twinkle,
                 ),
             );
     }
@@ -121,6 +122,39 @@ fn generate_dynamic_universe(
                     systeme_stellaire,
                 ));
             }
+        }
+    }
+}
+
+pub fn animate_star_twinkle(
+    temps: Res<Time>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    requete_etoiles: Query<(
+        &Star,
+        &crate::astrophysique::StellarSystem,
+        &Handle<ColorMaterial>,
+    )>,
+) {
+    let temps_ecoule = temps.elapsed_seconds();
+
+    for (etoile, systeme, handle_materiau) in requete_etoiles.iter() {
+        if let Some(materiau) = materials.get_mut(handle_materiau) {
+            let (r, g, b) = match systeme.classe {
+                crate::astrophysique::SpectralClass::O => (0.3, 0.5, 1.0),
+                crate::astrophysique::SpectralClass::B => (0.6, 0.8, 1.0),
+                crate::astrophysique::SpectralClass::A => (1.0, 1.0, 1.0),
+                crate::astrophysique::SpectralClass::F => (1.0, 1.0, 0.8),
+                crate::astrophysique::SpectralClass::G => (1.0, 0.9, 0.2),
+                crate::astrophysique::SpectralClass::K => (1.0, 0.5, 0.1),
+                crate::astrophysique::SpectralClass::M => (0.9, 0.2, 0.2),
+            };
+
+            let dephasage = (etoile.grille_x as f32 * 0.7) + (etoile.grille_y as f32 * 0.3);
+
+            let vitesse = 2.5;
+            let intensite = 3.0 + ((temps_ecoule * vitesse + dephasage).sin() * 1.5);
+
+            materiau.color = Color::srgb(r * intensite, g * intensite, b * intensite);
         }
     }
 }
