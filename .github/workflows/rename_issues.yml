@@ -26,7 +26,7 @@ jobs:
             if (match) {
               const type = match[1].toLowerCase();
               
-              title = title.replace(/^\[feat\/fix\/chore\]:\s*/i, "").trim();
+              title = title.replace(/^\[?([a-z]+)\]?:\s*/i, "").trim();
               
               if (!title.startsWith(`${type}:`)) {
                 const newTitle = `${type}: ${title}`;
