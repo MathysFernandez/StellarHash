@@ -12,6 +12,7 @@ impl Plugin for UniversPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GlobalSeed(42))
             .init_resource::<LoadedSectors>()
+            .add_systems(Startup, initialize_star_assets)
             .add_systems(
                 Update,
                 (
@@ -48,13 +49,44 @@ pub struct Planet {
     pub vitesse_orbite: f32,
 }
 
+#[derive(Resource)]
+pub struct StarAssets {
+    pub mesh_base: Handle<Mesh>,
+    pub mat_o: Handle<ColorMaterial>,
+    pub mat_b: Handle<ColorMaterial>,
+    pub mat_a: Handle<ColorMaterial>,
+    pub mat_f: Handle<ColorMaterial>,
+    pub mat_g: Handle<ColorMaterial>,
+    pub mat_k: Handle<ColorMaterial>,
+    pub mat_m: Handle<ColorMaterial>,
+}
+
+fn initialize_star_assets(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let hdr = 15.0;
+
+    commands.insert_resource(StarAssets {
+        mesh_base: meshes.add(Circle::new(1.0)), 
+        
+        mat_o: materials.add(ColorMaterial::from(Color::srgb(0.3 * hdr, 0.5 * hdr, 1.0 * hdr))),
+        mat_b: materials.add(ColorMaterial::from(Color::srgb(0.6 * hdr, 0.8 * hdr, 1.0 * hdr))),
+        mat_a: materials.add(ColorMaterial::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 1.0 * hdr))),
+        mat_f: materials.add(ColorMaterial::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 0.8 * hdr))),
+        mat_g: materials.add(ColorMaterial::from(Color::srgb(1.0 * hdr, 0.9 * hdr, 0.2 * hdr))),
+        mat_k: materials.add(ColorMaterial::from(Color::srgb(1.0 * hdr, 0.5 * hdr, 0.1 * hdr))),
+        mat_m: materials.add(ColorMaterial::from(Color::srgb(0.9 * hdr, 0.2 * hdr, 0.2 * hdr))),
+    });
+}
+
 fn generate_dynamic_universe(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<MainCamera>>,
     graine: Res<GlobalSeed>,
     mut secteurs_charges: ResMut<LoadedSectors>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    star_assets: Res<StarAssets>,
     mut derniere_pos_maj: Local<Vec2>,
     mut dernier_zoom_maj: Local<f32>,
 ) {
@@ -92,27 +124,29 @@ fn generate_dynamic_universe(
                 let systeme_stellaire =
                     crate::astrophysique::generate_characteristics(x, y, probabilite);
 
-                let couleur_etoile = match systeme_stellaire.classe {
-                    crate::astrophysique::SpectralClass::O => Color::srgb(0.3, 0.5, 1.0),
-                    crate::astrophysique::SpectralClass::B => Color::srgb(0.6, 0.8, 1.0),
-                    crate::astrophysique::SpectralClass::A => Color::srgb(1.0, 1.0, 1.0),
-                    crate::astrophysique::SpectralClass::F => Color::srgb(1.0, 1.0, 0.8),
-                    crate::astrophysique::SpectralClass::G => Color::srgb(1.0, 0.9, 0.2),
-                    crate::astrophysique::SpectralClass::K => Color::srgb(1.0, 0.5, 0.1),
-                    crate::astrophysique::SpectralClass::M => Color::srgb(0.9, 0.2, 0.2),
+                let handle_materiau = match systeme_stellaire.classe {
+                    crate::astrophysique::SpectralClass::O => star_assets.mat_o.clone(),
+                    crate::astrophysique::SpectralClass::B => star_assets.mat_b.clone(),
+                    crate::astrophysique::SpectralClass::A => star_assets.mat_a.clone(),
+                    crate::astrophysique::SpectralClass::F => star_assets.mat_f.clone(),
+                    crate::astrophysique::SpectralClass::G => star_assets.mat_g.clone(),
+                    crate::astrophysique::SpectralClass::K => star_assets.mat_k.clone(),
+                    crate::astrophysique::SpectralClass::M => star_assets.mat_m.clone(),
                 };
 
                 let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
+                let rayon_final = taille_visuelle / 2.0;
 
                 commands.spawn((
                     MaterialMesh2dBundle {
-                        mesh: Mesh2dHandle(meshes.add(Circle::new(taille_visuelle / 2.0))),
-                        material: materials.add(ColorMaterial::from(couleur_etoile)),
+                        mesh: Mesh2dHandle(star_assets.mesh_base.clone()),
+                        material: handle_materiau,
                         transform: Transform::from_xyz(
                             x as f32 * taille_secteur,
                             y as f32 * taille_secteur,
                             0.0,
-                        ),
+                        )
+                        .with_scale(Vec3::splat(rayon_final)), 
                         ..default()
                     },
                     Star {
@@ -128,42 +162,23 @@ fn generate_dynamic_universe(
 
 pub fn animate_star_twinkle(
     temps: Res<Time>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut requete_etoiles: Query<(
         &Star,
         &crate::astrophysique::StellarSystem,
-        &Handle<ColorMaterial>,
         &mut Transform,
     )>,
 ) {
     let temps_ecoule = temps.elapsed_seconds();
 
-    for (etoile, systeme, handle_materiau, mut transform) in requete_etoiles.iter_mut() {
-        let (r, g, b) = match systeme.classe {
-            crate::astrophysique::SpectralClass::O => (0.3, 0.5, 1.0),
-            crate::astrophysique::SpectralClass::B => (0.6, 0.8, 1.0),
-            crate::astrophysique::SpectralClass::A => (1.0, 1.0, 1.0),
-            crate::astrophysique::SpectralClass::F => (1.0, 1.0, 0.8),
-            crate::astrophysique::SpectralClass::G => (1.0, 0.9, 0.2),
-            crate::astrophysique::SpectralClass::K => (1.0, 0.5, 0.1),
-            crate::astrophysique::SpectralClass::M => (0.9, 0.2, 0.2),
-        };
-
+    for (etoile, systeme, mut transform) in requete_etoiles.iter_mut() {
         let dephasage = (etoile.grille_x as f32 * 0.7) + (etoile.grille_y as f32 * 0.3);
         let vitesse = 2.0;
-
         let onde_sinus = (temps_ecoule * vitesse + dephasage).sin();
 
-        // min: 10.0
-        // max: 20.0
-        let intensite = 15.0 + (onde_sinus * 5.0);
+        let taille_visuelle = 8.0 + (systeme.rayon_solaire * 4.0);
+        let rayon_base = taille_visuelle / 2.0;
 
-        let echelle = 1.0 + (onde_sinus * 0.01);
-
-        if let Some(materiau) = materials.get_mut(handle_materiau) {
-            materiau.color = Color::srgb(r * intensite, g * intensite, b * intensite);
-        }
-
+        let echelle = rayon_base * (1.0 + (onde_sinus * 0.01));
         transform.scale = Vec3::splat(echelle);
     }
 }
@@ -267,41 +282,53 @@ fn handle_star_click(
                 }
 
                 if position_monde.distance(transform_etoile.translation.truncate()) < 25.0 {
-                    if developpe.is_none() {
-                        commands
-                            .entity(entite)
-                            .insert(ExpandedSystem)
-                            .with_children(|parent| {
-                                for i in 0..systeme.nb_planetes {
-                                    let rayon_orbite = 15.0 + (i as f32 * 10.0);
-                                    let angle_depart = (i as f32) * 1.2;
-                                    let vitesse = 1.5 / (i as f32 + 1.0);
+                    if position_monde.distance(transform_etoile.translation.truncate()) < 25.0 {
+                        if developpe.is_none() {
+                            let taille_visuelle = 16.0 + (systeme.rayon_solaire * 4.0);
+                            let echelle_etoile = taille_visuelle / 2.0;
 
-                                    parent.spawn((
-                                        MaterialMesh2dBundle {
-                                            mesh: Mesh2dHandle(meshes.add(Circle::new(2.0))),
-                                            material: materials.add(ColorMaterial::from(
-                                                Color::srgb(0.6, 0.8, 0.9),
-                                            )),
-                                            transform: Transform::from_xyz(
-                                                rayon_orbite * angle_depart.cos(),
-                                                rayon_orbite * angle_depart.sin(),
-                                                1.0,
-                                            ),
-                                            ..default()
-                                        },
-                                        Planet {
-                                            rayon_orbite,
-                                            angle_actuel: angle_depart,
-                                            vitesse_orbite: vitesse,
-                                        },
-                                    ));
-                                }
-                            });
-                    } else {
+                            commands
+                                .entity(entite)
+                                .insert(ExpandedSystem)
+                                .with_children(|parent| {
+                                    for i in 0..systeme.nb_planetes {
+                                        let rayon_orbite_voulu = 15.0 + (i as f32 * 5.0);
+                                        let rayon_orbite = rayon_orbite_voulu / echelle_etoile;
+
+                                        let angle_depart = (i as f32) * 1.2;
+                                        let vitesse = 1.5 / (i as f32 + 1.0);
+
+                                        let echelle_planete = 1.0 / echelle_etoile;
+
+                                        parent.spawn((
+                                            MaterialMesh2dBundle {
+                                                mesh: Mesh2dHandle(meshes.add(Circle::new(2.0))),
+                                                material: materials.add(ColorMaterial::from(
+                                                    Color::srgb(0.6, 0.8, 0.9),
+                                                )),
+                                                transform: Transform::from_xyz(
+                                                    rayon_orbite * angle_depart.cos(),
+                                                    rayon_orbite * angle_depart.sin(),
+                                                    1.0,
+                                                )
+                                                .with_scale(Vec3::splat(echelle_planete)),
+                                                ..default()
+                                            },
+                                            Planet {
+                                                rayon_orbite,
+                                                angle_actuel: angle_depart,
+                                                vitesse_orbite: vitesse,
+                                            },
+                                        ));
+                                    }
+                                });
+                        } else {
+                        // On referme le système si on clique à nouveau dessus
                         commands.entity(entite).remove::<ExpandedSystem>();
                         commands.entity(entite).despawn_descendants();
+                        }
                     }
+                    // On sort de la boucle for (on a trouvé l'étoile cliquée)
                     break;
                 }
             }
