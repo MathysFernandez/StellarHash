@@ -102,7 +102,7 @@ fn initialize_info_panel(mut commands: Commands, asset_server: Res<AssetServer>)
                     padding: UiRect::all(Val::Px(10.0)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.999)),
+                background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 1.0)),
                 ..default()
             },
             PanneauInfo,
@@ -223,7 +223,7 @@ fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer
                 padding: UiRect::all(Val::Px(15.0)),
                 ..default()
             },
-            background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.999)),
+            background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 1.0)),
             ..default()
         })
         .with_children(|parent| {

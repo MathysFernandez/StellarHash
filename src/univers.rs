@@ -156,7 +156,7 @@ pub fn animate_star_twinkle(
 
         // min: 10.0
         // max: 20.0
-        let intensite = 50.0 + (onde_sinus * 5.0);
+        let intensite = 15.0 + (onde_sinus * 5.0);
 
         let echelle = 1.0 + (onde_sinus * 0.01);
 
