@@ -150,15 +150,15 @@ pub fn animate_star_twinkle(
         };
 
         let dephasage = (etoile.grille_x as f32 * 0.7) + (etoile.grille_y as f32 * 0.3);
-        let vitesse = 2.5;
+        let vitesse = 2.0;
 
         let onde_sinus = (temps_ecoule * vitesse + dephasage).sin();
 
-        // min: 3.0
-        // max: 5.0
-        let intensite = 4.0 + (onde_sinus * 1.0);
+        // min: 10.0
+        // max: 20.0
+        let intensite = 50.0 + (onde_sinus * 5.0);
 
-        let echelle = 1.0 + (onde_sinus * 0.02);
+        let echelle = 1.0 + (onde_sinus * 0.01);
 
         if let Some(materiau) = materials.get_mut(handle_materiau) {
             materiau.color = Color::srgb(r * intensite, g * intensite, b * intensite);
