@@ -66,7 +66,7 @@ fn initialize_fps(mut commands: Commands, asset_server: Res<AssetServer>) {
                     TextStyle {
                         font: police,
                         font_size: 24.0,
-                        color: Color::srgb(0.0, 1.0, 0.0),
+                        color: Color::WHITE,
                     },
                 ),
                 TexteFps,
@@ -102,7 +102,7 @@ fn initialize_info_panel(mut commands: Commands, asset_server: Res<AssetServer>)
                     padding: UiRect::all(Val::Px(10.0)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)),
+                background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 1.0)),
                 ..default()
             },
             PanneauInfo,
@@ -223,7 +223,7 @@ fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer
                 padding: UiRect::all(Val::Px(15.0)),
                 ..default()
             },
-            background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
+            background_color: BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 1.0)),
             ..default()
         })
         .with_children(|parent| {
@@ -233,7 +233,7 @@ fn initialize_trivia_panel(mut commands: Commands, asset_server: Res<AssetServer
                     TextStyle {
                         font: police,
                         font_size: 16.0,
-                        color: Color::srgb(0.8, 0.8, 1.0),
+                        color: Color::WHITE,
                     },
                 ),
                 TexteAnecdote,
