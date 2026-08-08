@@ -17,14 +17,15 @@ fn prepare_world_overload() -> App {
 
     for x in -50..50 {
         for y in -50..50 {
-            app.world_mut().spawn(Star {
+            let entite = app.world_mut().spawn(Star {
                 grille_x: x,
                 grille_y: y,
-            });
+            }).id();
+            
             app.world_mut()
                 .resource_mut::<LoadedSectors>()
                 .0
-                .insert((x, y));
+                .insert((x, y), Some(entite));
         }
     }
 

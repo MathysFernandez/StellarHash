@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
-use bevy::utils::HashSet;
+use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
 
 use bevy::{
@@ -28,7 +28,7 @@ impl Plugin for UniversPlugin {
                     animate_orbits,
                     handle_planet_lod,
 
-                    // --- unused function --- 
+                    // --- unused function ---
                     // animate_star_scale,
                 ),
             );
@@ -39,7 +39,7 @@ impl Plugin for UniversPlugin {
 pub struct GlobalSeed(pub u32);
 
 #[derive(Resource, Default)]
-pub struct LoadedSectors(pub HashSet<(i32, i32)>);
+pub struct LoadedSectors(pub HashMap<(i32, i32), Option<Entity>>);
 
 #[derive(Component)]
 pub struct Star {
@@ -154,13 +154,13 @@ fn generate_dynamic_universe(
 
     for x in (centre_grille_x - rayon_vision)..=(centre_grille_x + rayon_vision) {
         for y in (centre_grille_y - rayon_vision)..=(centre_grille_y + rayon_vision) {
-            if secteurs_charges.0.contains(&(x, y)) {
+            if secteurs_charges.0.contains_key(&(x, y)) {
                 continue;
             }
 
-            secteurs_charges.0.insert((x, y));
-
             let probabilite = generation::calculate_spatial_hash(x, y, graine.0);
+
+            let mut entite_etoile = None;
 
             if probabilite > 0.95 {
                 let systeme_stellaire =
@@ -179,7 +179,7 @@ fn generate_dynamic_universe(
                 let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
                 let rayon_final = taille_visuelle / 2.0;
 
-                commands.spawn((
+                let entite = commands.spawn((
                     MaterialMesh2dBundle {
                         mesh: Mesh2dHandle(star_assets.mesh_base.clone()),
                         material: handle_materiau,
@@ -196,8 +196,10 @@ fn generate_dynamic_universe(
                         grille_y: y,
                     },
                     systeme_stellaire,
-                ));
+                )).id();
+                entite_etoile = Some(entite);
             }
+            secteurs_charges.0.insert((x, y), entite_etoile);
         }
     }
 }
@@ -205,7 +207,6 @@ fn generate_dynamic_universe(
 pub fn spatial_garbage_collector(
     mut commands: Commands,
     requete_camera: Query<&Transform, With<MainCamera>>,
-    requete_etoiles: Query<(Entity, &Star)>,
     mut secteurs_charges: ResMut<LoadedSectors>,
     mut derniere_pos_maj: Local<Vec2>,
     mut dernier_zoom_maj: Local<f32>,
@@ -229,16 +230,17 @@ pub fn spatial_garbage_collector(
     let centre_grille_x = (pos_actuelle.x / taille_secteur).round() as i32;
     let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
-    for (entite, etoile) in requete_etoiles.iter() {
-        if (etoile.grille_x - centre_grille_x).abs() > rayon_despawn
-            || (etoile.grille_y - centre_grille_y).abs() > rayon_despawn
-        {
-            commands.entity(entite).despawn_recursive();
+    secteurs_charges.0.retain(|&(x, y), &mut opt_entite| {
+        let est_proche = (x - centre_grille_x).abs() <= rayon_despawn 
+                      && (y - centre_grille_y).abs() <= rayon_despawn;
+        
+        if !est_proche {
+            if let Some(entite) = opt_entite {
+                commands.entity(entite).despawn_recursive();
+            }
         }
-    }
-
-    secteurs_charges.0.retain(|&(x, y)| {
-        (x - centre_grille_x).abs() <= rayon_despawn && (y - centre_grille_y).abs() <= rayon_despawn
+        
+        est_proche
     });
 }
 
@@ -483,8 +485,8 @@ mod tests {
         let entite_lointaine = app.world_mut().spawn(Star { grille_x: 50, grille_y: 50 }).id();
 
         let mut secteurs = app.world_mut().resource_mut::<LoadedSectors>();
-        secteurs.0.insert((2, 2));
-        secteurs.0.insert((50, 50));
+        secteurs.0.insert((2, 2), Some(entite_proche));
+        secteurs.0.insert((50, 50), Some(entite_lointaine));
 
         let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
@@ -496,8 +498,8 @@ mod tests {
         assert!(app.world().get_entity(entite_lointaine).is_none());
 
         let secteurs_apres = app.world().resource::<LoadedSectors>();
-        assert!(secteurs_apres.0.contains(&(2, 2)));
-        assert!(!secteurs_apres.0.contains(&(50, 50)), "The distant sector should have been removed from memory.");
+        assert!(secteurs_apres.0.contains_key(&(2, 2)));
+        assert!(!secteurs_apres.0.contains_key(&(50, 50)), "The distant sector should have been removed from memory.");
     }
 
     #[test]
