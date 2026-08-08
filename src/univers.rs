@@ -284,7 +284,6 @@ pub fn spatial_garbage_collector(
         });
     }
 
-    // On stocke la zone actuelle pour la comparer au prochain mouvement
     *ancienne_zone = Some((centre_grille_x, centre_grille_y, rayon_despawn));
 }
 
