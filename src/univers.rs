@@ -224,6 +224,7 @@ pub fn spatial_garbage_collector(
     mut secteurs_charges: ResMut<LoadedSectors>,
     mut derniere_pos_maj: Local<Vec2>,
     mut dernier_zoom_maj: Local<f32>,
+    mut ancienne_zone: Local<Option<(i32, i32, i32)>>,
 ) {
     let camera_transform = requete_camera.single();
     let pos_actuelle = camera_transform.translation.truncate();
@@ -244,18 +245,46 @@ pub fn spatial_garbage_collector(
     let centre_grille_x = (pos_actuelle.x / taille_secteur).round() as i32;
     let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
-    secteurs_charges.0.retain(|&(x, y), &mut opt_entite| {
-        let est_proche = (x - centre_grille_x).abs() <= rayon_despawn
-            && (y - centre_grille_y).abs() <= rayon_despawn;
+    let min_x_nouveau = centre_grille_x - rayon_despawn;
+    let max_x_nouveau = centre_grille_x + rayon_despawn;
+    let min_y_nouveau = centre_grille_y - rayon_despawn;
+    let max_y_nouveau = centre_grille_y + rayon_despawn;
 
-        if !est_proche {
-            if let Some(entite) = opt_entite {
-                commands.entity(entite).despawn_recursive();
+    if let Some((ancien_x, ancien_y, ancien_rayon)) = *ancienne_zone {
+        let min_x_ancien = ancien_x - ancien_rayon;
+        let max_x_ancien = ancien_x + ancien_rayon;
+        let min_y_ancien = ancien_y - ancien_rayon;
+        let max_y_ancien = ancien_y + ancien_rayon;
+
+        for x in min_x_ancien..=max_x_ancien {
+            for y in min_y_ancien..=max_y_ancien {
+                if x < min_x_nouveau || x > max_x_nouveau || y < min_y_nouveau || y > max_y_nouveau
+                {
+                    if let Some(opt_entite) = secteurs_charges.0.remove(&(x, y)) {
+                        if let Some(entite) = opt_entite {
+                            commands.entity(entite).despawn_recursive();
+                        }
+                    }
+                }
             }
         }
+    } else {
+        secteurs_charges.0.retain(|&(x, y), &mut opt_entite| {
+            let est_proche = x >= min_x_nouveau
+                && x <= max_x_nouveau
+                && y >= min_y_nouveau
+                && y <= max_y_nouveau;
 
-        est_proche
-    });
+            if !est_proche {
+                if let Some(entite) = opt_entite {
+                    commands.entity(entite).despawn_recursive();
+                }
+            }
+            est_proche
+        });
+    }
+
+    *ancienne_zone = Some((centre_grille_x, centre_grille_y, rayon_despawn));
 }
 
 fn handle_planet_lod(
