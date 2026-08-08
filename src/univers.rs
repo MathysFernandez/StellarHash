@@ -27,7 +27,6 @@ impl Plugin for UniversPlugin {
                     handle_star_click,
                     animate_orbits,
                     handle_planet_lod,
-
                     // --- unused function ---
                     // animate_star_scale,
                 ),
@@ -56,7 +55,6 @@ pub struct Planet {
     pub angle_actuel: f32,
     pub vitesse_orbite: f32,
 }
-
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct StarMaterial {
@@ -92,7 +90,7 @@ pub fn animate_star_scale(
     for (etoile, systeme, mut transform) in requete_etoiles.iter_mut() {
         let world_x = etoile.grille_x as f32 * 80.0;
         let world_y = etoile.grille_y as f32 * 80.0;
-        
+
         let seed = world_x * 0.1337 + world_y * 0.7331;
 
         let twinkle = ((temps_ecoule * 3.0 + seed).sin() + 1.0) * 0.5;
@@ -115,13 +113,27 @@ fn initialize_star_assets(
     commands.insert_resource(StarAssets {
         mesh_base: meshes.add(Circle::new(1.0)),
 
-        mat_o: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(0.3 * hdr, 0.5 * hdr, 1.0 * hdr)) }),
-        mat_b: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(0.6 * hdr, 0.8 * hdr, 1.0 * hdr)) }),
-        mat_a: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 1.0 * hdr)) }),
-        mat_f: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 0.8 * hdr)) }),
-        mat_g: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 0.9 * hdr, 0.2 * hdr)) }),
-        mat_k: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 0.5 * hdr, 0.1 * hdr)) }),
-        mat_m: materials.add(StarMaterial { base_color: LinearRgba::from(Color::srgb(0.9 * hdr, 0.2 * hdr, 0.2 * hdr)) }),
+        mat_o: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(0.3 * hdr, 0.5 * hdr, 1.0 * hdr)),
+        }),
+        mat_b: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(0.6 * hdr, 0.8 * hdr, 1.0 * hdr)),
+        }),
+        mat_a: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 1.0 * hdr)),
+        }),
+        mat_f: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 1.0 * hdr, 0.8 * hdr)),
+        }),
+        mat_g: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 0.9 * hdr, 0.2 * hdr)),
+        }),
+        mat_k: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(1.0 * hdr, 0.5 * hdr, 0.1 * hdr)),
+        }),
+        mat_m: materials.add(StarMaterial {
+            base_color: LinearRgba::from(Color::srgb(0.9 * hdr, 0.2 * hdr, 0.2 * hdr)),
+        }),
     });
 }
 
@@ -179,24 +191,26 @@ fn generate_dynamic_universe(
                 let taille_visuelle = 8.0 + (systeme_stellaire.rayon_solaire * 4.0);
                 let rayon_final = taille_visuelle / 2.0;
 
-                let entite = commands.spawn((
-                    MaterialMesh2dBundle {
-                        mesh: Mesh2dHandle(star_assets.mesh_base.clone()),
-                        material: handle_materiau,
-                        transform: Transform::from_xyz(
-                            x as f32 * taille_secteur,
-                            y as f32 * taille_secteur,
-                            0.0,
-                        )
-                        .with_scale(Vec3::splat(rayon_final)),
-                        ..default()
-                    },
-                    Star {
-                        grille_x: x,
-                        grille_y: y,
-                    },
-                    systeme_stellaire,
-                )).id();
+                let entite = commands
+                    .spawn((
+                        MaterialMesh2dBundle {
+                            mesh: Mesh2dHandle(star_assets.mesh_base.clone()),
+                            material: handle_materiau,
+                            transform: Transform::from_xyz(
+                                x as f32 * taille_secteur,
+                                y as f32 * taille_secteur,
+                                0.0,
+                            )
+                            .with_scale(Vec3::splat(rayon_final)),
+                            ..default()
+                        },
+                        Star {
+                            grille_x: x,
+                            grille_y: y,
+                        },
+                        systeme_stellaire,
+                    ))
+                    .id();
                 entite_etoile = Some(entite);
             }
             secteurs_charges.0.insert((x, y), entite_etoile);
@@ -231,15 +245,15 @@ pub fn spatial_garbage_collector(
     let centre_grille_y = (pos_actuelle.y / taille_secteur).round() as i32;
 
     secteurs_charges.0.retain(|&(x, y), &mut opt_entite| {
-        let est_proche = (x - centre_grille_x).abs() <= rayon_despawn 
-                      && (y - centre_grille_y).abs() <= rayon_despawn;
-        
+        let est_proche = (x - centre_grille_x).abs() <= rayon_despawn
+            && (y - centre_grille_y).abs() <= rayon_despawn;
+
         if !est_proche {
             if let Some(entite) = opt_entite {
                 commands.entity(entite).despawn_recursive();
             }
         }
-        
+
         est_proche
     });
 }
@@ -346,7 +360,7 @@ fn handle_star_click(
                         commands.entity(entite).remove::<ExpandedSystem>();
                         commands.entity(entite).despawn_descendants();
                     }
-                    
+
                     break;
                 }
             }
@@ -396,7 +410,7 @@ mod tests {
         app
     }
 
-   // --- Utility function for the Garbage Collector ---
+    // --- Utility function for the Garbage Collector ---
     fn preparer_app_gc() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
@@ -440,7 +454,10 @@ mod tests {
         assert!(app.world().resource::<LoadedSectors>().0.is_empty());
         app.update();
         let secteurs = app.world().resource::<LoadedSectors>();
-        assert!(!secteurs.0.is_empty(), "The sectors around the camera should have been generated.");
+        assert!(
+            !secteurs.0.is_empty(),
+            "The sectors around the camera should have been generated."
+        );
     }
 
     #[test]
@@ -450,13 +467,18 @@ mod tests {
         app.update();
         let secteurs_avant = app.world().resource::<LoadedSectors>().0.len();
 
-        let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
+        let mut requete_camera = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 15.0;
 
         app.update();
         let secteurs_apres = app.world().resource::<LoadedSectors>().0.len();
-        assert_eq!(secteurs_avant, secteurs_apres, "The function should have returned early without loading new sectors.");
+        assert_eq!(
+            secteurs_avant, secteurs_apres,
+            "The function should have returned early without loading new sectors."
+        );
     }
 
     #[test]
@@ -466,14 +488,19 @@ mod tests {
         app.update();
         let secteurs_avant = app.world().resource::<LoadedSectors>().0.len();
 
-        let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
+        let mut requete_camera = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut transform = requete_camera.single_mut(app.world_mut());
         transform.translation.x += 1000.0;
         transform.translation.y += 1000.0;
 
         app.update();
         let secteurs_apres = app.world().resource::<LoadedSectors>().0.len();
-        assert!(secteurs_apres > secteurs_avant, "The camera teleported 1,000 units; new sectors should have been loaded.");
+        assert!(
+            secteurs_apres > secteurs_avant,
+            "The camera teleported 1,000 units; new sectors should have been loaded."
+        );
     }
 
     #[test]
@@ -481,14 +508,28 @@ mod tests {
         let mut app = preparer_app_gc();
         app.add_systems(Update, spatial_garbage_collector);
 
-        let entite_proche = app.world_mut().spawn(Star { grille_x: 2, grille_y: 2 }).id();
-        let entite_lointaine = app.world_mut().spawn(Star { grille_x: 50, grille_y: 50 }).id();
+        let entite_proche = app
+            .world_mut()
+            .spawn(Star {
+                grille_x: 2,
+                grille_y: 2,
+            })
+            .id();
+        let entite_lointaine = app
+            .world_mut()
+            .spawn(Star {
+                grille_x: 50,
+                grille_y: 50,
+            })
+            .id();
 
         let mut secteurs = app.world_mut().resource_mut::<LoadedSectors>();
         secteurs.0.insert((2, 2), Some(entite_proche));
         secteurs.0.insert((50, 50), Some(entite_lointaine));
 
-        let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
+        let mut requete_camera = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x = 100.0;
 
@@ -499,7 +540,10 @@ mod tests {
 
         let secteurs_apres = app.world().resource::<LoadedSectors>();
         assert!(secteurs_apres.0.contains_key(&(2, 2)));
-        assert!(!secteurs_apres.0.contains_key(&(50, 50)), "The distant sector should have been removed from memory.");
+        assert!(
+            !secteurs_apres.0.contains_key(&(50, 50)),
+            "The distant sector should have been removed from memory."
+        );
     }
 
     #[test]
@@ -507,19 +551,32 @@ mod tests {
         let mut app = preparer_app_gc();
         app.add_systems(Update, spatial_garbage_collector);
 
-        let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
+        let mut requete_camera = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x = 1000.0;
         app.update();
 
-        let entite_lointaine = app.world_mut().spawn(Star { grille_x: 9999, grille_y: 9999 }).id();
+        let entite_lointaine = app
+            .world_mut()
+            .spawn(Star {
+                grille_x: 9999,
+                grille_y: 9999,
+            })
+            .id();
 
-        let mut requete_camera = app.world_mut().query_filtered::<&mut Transform, With<MainCamera>>();
+        let mut requete_camera = app
+            .world_mut()
+            .query_filtered::<&mut Transform, With<MainCamera>>();
         let mut camera_transform = requete_camera.single_mut(app.world_mut());
         camera_transform.translation.x += 10.0;
         app.update();
 
-        assert!(app.world().get_entity(entite_lointaine).is_some(), "The GC should not have complied.");
+        assert!(
+            app.world().get_entity(entite_lointaine).is_some(),
+            "The GC should not have complied."
+        );
     }
 
     #[test]
@@ -527,8 +584,19 @@ mod tests {
         let mut app = preparer_app_lod();
         app.add_systems(Update, handle_planet_lod);
 
-        app.world_mut().spawn((Transform::from_scale(Vec3::splat(4.0)), MainCamera));
-        let entite_planete = app.world_mut().spawn((Planet { rayon_orbite: 10.0, angle_actuel: 0.0, vitesse_orbite: 1.0 }, Visibility::Inherited)).id();
+        app.world_mut()
+            .spawn((Transform::from_scale(Vec3::splat(4.0)), MainCamera));
+        let entite_planete = app
+            .world_mut()
+            .spawn((
+                Planet {
+                    rayon_orbite: 10.0,
+                    angle_actuel: 0.0,
+                    vitesse_orbite: 1.0,
+                },
+                Visibility::Inherited,
+            ))
+            .id();
 
         app.update();
 
@@ -541,8 +609,19 @@ mod tests {
         let mut app = preparer_app_lod();
         app.add_systems(Update, handle_planet_lod);
 
-        app.world_mut().spawn((Transform::from_scale(Vec3::splat(1.0)), MainCamera));
-        let entite_planete = app.world_mut().spawn((Planet { rayon_orbite: 10.0, angle_actuel: 0.0, vitesse_orbite: 1.0 }, Visibility::Hidden)).id();
+        app.world_mut()
+            .spawn((Transform::from_scale(Vec3::splat(1.0)), MainCamera));
+        let entite_planete = app
+            .world_mut()
+            .spawn((
+                Planet {
+                    rayon_orbite: 10.0,
+                    angle_actuel: 0.0,
+                    vitesse_orbite: 1.0,
+                },
+                Visibility::Hidden,
+            ))
+            .id();
 
         app.update();
 
@@ -555,20 +634,49 @@ mod tests {
         let mut app = preparer_app_lod();
         app.add_systems(Update, handle_planet_lod);
 
-        let entite_camera = app.world_mut().spawn((Transform::from_scale(Vec3::splat(2.0)), MainCamera)).id();
-        let entite_planete = app.world_mut().spawn((Planet { rayon_orbite: 10.0, angle_actuel: 0.0, vitesse_orbite: 1.0 }, Visibility::Hidden)).id();
+        let entite_camera = app
+            .world_mut()
+            .spawn((Transform::from_scale(Vec3::splat(2.0)), MainCamera))
+            .id();
+        let entite_planete = app
+            .world_mut()
+            .spawn((
+                Planet {
+                    rayon_orbite: 10.0,
+                    angle_actuel: 0.0,
+                    vitesse_orbite: 1.0,
+                },
+                Visibility::Hidden,
+            ))
+            .id();
 
         app.update();
-        assert_eq!(*app.world().get::<Visibility>(entite_planete).unwrap(), Visibility::Inherited);
+        assert_eq!(
+            *app.world().get::<Visibility>(entite_planete).unwrap(),
+            Visibility::Inherited
+        );
 
-        *app.world_mut().get_mut::<Visibility>(entite_planete).unwrap() = Visibility::Hidden;
+        *app.world_mut()
+            .get_mut::<Visibility>(entite_planete)
+            .unwrap() = Visibility::Hidden;
         app.update();
         let visibilite_finale = app.world().get::<Visibility>(entite_planete).unwrap();
-        assert_eq!(*visibilite_finale, Visibility::Hidden, "The system ignored the Changed<Transform> filter.");
+        assert_eq!(
+            *visibilite_finale,
+            Visibility::Hidden,
+            "The system ignored the Changed<Transform> filter."
+        );
 
-        app.world_mut().get_mut::<Transform>(entite_camera).unwrap().scale.x = 2.1;
+        app.world_mut()
+            .get_mut::<Transform>(entite_camera)
+            .unwrap()
+            .scale
+            .x = 2.1;
         app.update();
-        assert_eq!(*app.world().get::<Visibility>(entite_planete).unwrap(), Visibility::Inherited);
+        assert_eq!(
+            *app.world().get::<Visibility>(entite_planete).unwrap(),
+            Visibility::Inherited
+        );
     }
 
     #[test]
@@ -576,11 +684,24 @@ mod tests {
         let mut app = preparer_app_clic();
         app.add_systems(Update, handle_star_click);
 
-        let entite_etoile = app.world_mut().spawn((
-            Transform::from_xyz(0.0, 0.0, 0.0),
-            StellarSystem { nom: "Beta-Test".to_string(), classe: SpectralClass::G, masse_solaire: 1.0, rayon_solaire: 1.0, nb_planetes: 2, age_milliards_annees: 4.0 },
-            Star { grille_x: 0, grille_y: 0 },
-        )).id();
+        let entite_etoile = app
+            .world_mut()
+            .spawn((
+                Transform::from_xyz(0.0, 0.0, 0.0),
+                StellarSystem {
+                    nom: "Beta-Test".to_string(),
+                    classe: SpectralClass::G,
+                    masse_solaire: 1.0,
+                    rayon_solaire: 1.0,
+                    nb_planetes: 2,
+                    age_milliards_annees: 4.0,
+                },
+                Star {
+                    grille_x: 0,
+                    grille_y: 0,
+                },
+            ))
+            .id();
 
         app.update();
         assert!(app.world().get::<ExpandedSystem>(entite_etoile).is_none());
@@ -596,10 +717,17 @@ mod tests {
         let rayon = 100.0;
         let vitesse = std::f32::consts::PI;
 
-        let entite = app.world_mut().spawn((
-            Transform::default(),
-            Planet { rayon_orbite: rayon, angle_actuel: 0.0, vitesse_orbite: vitesse },
-        )).id();
+        let entite = app
+            .world_mut()
+            .spawn((
+                Transform::default(),
+                Planet {
+                    rayon_orbite: rayon,
+                    angle_actuel: 0.0,
+                    vitesse_orbite: vitesse,
+                },
+            ))
+            .id();
 
         app.add_systems(Update, animate_orbits);
         app.update();
@@ -612,7 +740,13 @@ mod tests {
 
         let difference_x = (transform.translation.x - 0.0).abs();
         let difference_y = (transform.translation.y - 100.0).abs();
-        assert!(difference_x < 0.0001, "The X position calculated using the cosine is incorrect.");
-        assert!(difference_y < 0.0001, "The Y position calculated using the sine is incorrect.");
+        assert!(
+            difference_x < 0.0001,
+            "The X position calculated using the cosine is incorrect."
+        );
+        assert!(
+            difference_y < 0.0001,
+            "The Y position calculated using the sine is incorrect."
+        );
     }
 }
