@@ -27,7 +27,9 @@ impl Plugin for UniversPlugin {
                     handle_star_click,
                     animate_orbits,
                     handle_planet_lod,
-                    animate_star_scale,
+
+                    // --- unused function --- 
+                    // animate_star_scale,
                 ),
             );
     }
@@ -80,6 +82,7 @@ pub struct StarAssets {
     pub mat_m: Handle<StarMaterial>,
 }
 
+// unused function
 pub fn animate_star_scale(
     temps: Res<Time>,
     mut requete_etoiles: Query<(&Star, &crate::astrophysique::StellarSystem, &mut Transform)>,
